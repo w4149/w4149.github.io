@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>音频体验</title>
+  <style>
+    .guide-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      text-align: center;
+      padding: 20px;
+    }
+    .guide-text {
+      font-size: 18px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .guide-btn {
+      background: #ff3b30;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 30px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .audio-screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
+      text-align: center;
+    }
+    .audio-status {
+      font-size: 16px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 60px;
+      line-height: 1.5;
+    }
+    .interrupt-btn {
+      background: #ff3b30;
+      color: white;
+      border: none;
+      padding: 16px 50px;
+      border-radius: 30px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 20px;
+      min-width: 200px;
+      box-shadow: 0 4px 12px rgba(255,59,48,0.3);
+      transition: transform 0.2s;
+    }
+    .interrupt-btn:active {
+      transform: scale(0.95);
+    }
+    .story-screen {
+      display: none;
+      height: 100%;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      position: relative;
+      color: #333;
+    }
+    .story-content {
+      height: calc(100% - 100px);
+      overflow-y: auto;
+      font-size: 17px;
+      line-height: 1.8;
+      padding-right: 8px;
+    }
+    .story-btn {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #007aff;
+      color: white;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 30px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      min-width: 180px;
+    }
+    .confirm-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 0 20px;
+    }
+    .modal-content {
+      background: white;
+      padding: 28px 20px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 320px;
+    }
+    .modal-text {
+      font-size: 17px;
+      color: #333;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .modal-btns {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+    }
+    .modal-btn {
+      padding: 10px 0;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 17px;
+      flex: 1;
+      margin: 0 5px;
+    }
+    .cancel-btn {
+      background: #f2f2f7;
+      color: #333;
+    }
+    .confirm-btn {
+      background: #ff3b30;
+      color: white;
+    }
+    .invalid-time {
+      display: none;
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+      font-size: 17px;
+      padding: 20px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border-radius: 20px;
+      font-size: 15px;
+      z-index: 50;
+    }
+    .timer-display {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 20px;
+    }
+    /* 加载状态样式 */
+    .loading {
+      text-align: center;
+      padding: 40px 0;
+      color: #666;
+    }
+    .error-message {
+      text-align: center;
+      padding: 40px 0;
+      color: #ff3b30;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 引导层 -->
+  <div class="guide-overlay" id="guideOverlay">
+    <div class="guide-text">
+      请点击下方按钮授权音频播放<br>
+      （浏览器需要您的允许才能播放声音）
+    </div>
+    <button class="guide-btn" id="guideBtn">授权并开始</button>
+  </div>
+
+  <div class="container">
+    <!-- 非有效时间提示 -->
+    <div class="invalid-time" id="invalidTime">
+      当前时段无法收听<br>
+      有效时间：每天 09:00-22:00
+    </div>
+
+    <!-- 音频界面 -->
+    <div class="audio-screen" id="audioScreen">
+      <div class="audio-status" id="audioStatus">正在播放...</div>
+      <button class="interrupt-btn" id="interruptBtn">打断</button>
+      <div class="timer-display" id="timerDisplay">已播放：00:00</div>
+      <!-- 音频标签 -->
+      <audio id="audio" src="https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/%E4%B8%BA%E4%BB%80%E4%B9%88%E6%88%91%E4%BB%AC%E5%BE%88%E9%9A%BE%E5%9B%9E%E7%AD%94%E2%80%9C%E7%94%9F%E6%B4%BB%E7%9A%84%E6%84%8F%E4%B9%89%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F%E2%80%9D%20%E2%80%94%E2%80%94%E9%98%BF%E5%A4%9A%E8%AF%BA%E7%9A%84%E6%8A%BD%E8%B1%A1%E8%99%9A%E6%97%A0%E4%B8%BB%E4%B9%89%E6%89%B9%E5%88%A4.mp3" loop></audio>
+    </div>
+
+    <!-- 故事文本界面（从TXT链接加载内容） -->
+    <div class="story-screen" id="storyScreen">
+      <div class="story-content" id="storyContent">
+        <!-- 内容将从TXT链接加载 -->
+      </div>
+      <button class="story-btn" id="storyBtn">结束阅读（恢复收听）</button>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="confirm-modal" id="confirmModal">
+      <div class="modal-content">
+        <div class="modal-text" id="modalText">
+          使用打断将消耗1条消息<br>
+          当前剩余：<span id="remainingCount">5</span>条<br>
+          确定要打断吗？
+        </div>
+        <div class="modal-btns">
+          <button class="modal-btn cancel-btn" id="cancelBtn">否</button>
+          <button class="modal-btn confirm-btn" id="confirmBtn">是</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const audio = document.getElementById('audio');
+    const guideOverlay = document.getElementById('guideOverlay');
+    const guideBtn = document.getElementById('guideBtn');
+    const audioScreen = document.getElementById('audioScreen');
+    const invalidTime = document.getElementById('invalidTime');
+    const remainingCountEl = document.getElementById('remainingCount');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const interruptBtn = document.getElementById('interruptBtn');
+    const storyContent = document.getElementById('storyContent');
+    
+    // 有效时间：早9点至晚10点
+    const startTime = 9;
+    const endTime = 22;
+    let remainingMessages = 5;
+    let isInStoryMode = false;
+    // 计时器相关变量
+    let playTimer = null;
+    let elapsedSeconds = 0;
+    const interruptTimes = [120, 300]; // 2分钟、5分钟自动打断
+    let hasInterruptedAt2min = false;
+    let hasInterruptedAt5min = false;
+    
+    // 请在此处填写TXT文档的网络链接
+    const txtUrl = "https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/%E6%96%87%E6%9C%AC%E6%B5%8B%E8%AF%95%E6%96%87%E4%BB%B6.txt"; // 例如："https://example.com/content.txt"
+
+    window.onload = () => {
+      const savedCount = localStorage.getItem('remainingMessages');
+      if (savedCount) remainingMessages = parseInt(savedCount);
+      updateRemainingCount();
+      
+      guideBtn.addEventListener('click', async () => {
+        guideOverlay.style.display = 'none';
+        checkTimeValidity();
+        try {
+          await audio.play();
+          startPlayTimer();
+          showToast('音频开始播放');
+        } catch (err) {
+          showToast('播放失败，请检查音频链接或权限');
+          console.error('音频错误：', err);
+        }
+      });
+
+      document.addEventListener('visibilitychange', handlePageVisibility);
+      interruptBtn.addEventListener('click', handleInterrupt);
+    };
+
+    // 开始播放计时器
+    function startPlayTimer() {
+      if (playTimer) clearInterval(playTimer);
+      playTimer = setInterval(() => {
+        if (!isInStoryMode && !audio.paused) {
+          elapsedSeconds++;
+          updateTimerDisplay();
+          checkAutoInterrupt();
+        }
+      }, 1000);
+    }
+
+    // 更新计时器显示
+    function updateTimerDisplay() {
+      const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+      const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+      timerDisplay.textContent = `已播放：${minutes}:${seconds}`;
+    }
+
+    // 检查自动打断
+    function checkAutoInterrupt() {
+      if (!hasInterruptedAt2min && elapsedSeconds >= interruptTimes[0]) {
+        hasInterruptedAt2min = true;
+        handleInterrupt();
+      } else if (!hasInterruptedAt5min && elapsedSeconds >= interruptTimes[1]) {
+        hasInterruptedAt5min = true;
+        handleInterrupt();
+      }
+    }
+
+    // 处理打断（加载TXT内容）
+    async function handleInterrupt() {
+      if (audio.paused || isInStoryMode) return;
+      
+      // 显示加载状态
+      storyContent.innerHTML = '<div class="loading">正在加载文本内容...</div>';
+      
+      // 执行打断基础逻辑
+      audio.volume = 0;
+      audioScreen.style.display = 'none';
+      document.getElementById('storyScreen').style.display = 'block';
+      isInStoryMode = true;
+      
+      // 加载TXT内容
+      if (!txtUrl) {
+        storyContent.innerHTML = '<div class="error-message">请先填写TXT文档链接</div>';
+        return;
+      }
+      
+      try {
+        const text = await loadTxtContent(txtUrl);
+        // 处理换行：将所有换行符替换为<br>标签，并保留段落间距
+        const formattedText = text
+          .replace(/\r\n/g, '\n') // 统一换行符（处理Windows格式）
+          .replace(/\n\n+/g, '</p><p>') // 连续换行视为段落分隔
+          .replace(/\n/g, '<br>'); // 单个换行视为换行
+        // 用p标签包裹内容，增强段落间距
+        storyContent.innerHTML = `<p>${formattedText}</p>`;
+      } catch (err) {
+        storyContent.innerHTML = `<div class="error-message">加载失败：${err.message}</div>`;
+        console.error('TXT加载错误：', err);
+      }
+    }
+
+    // 加载TXT文档内容（优化跨域逻辑）
+    async function loadTxtContent(url) {
+      // 尝试1：直接请求（如果目标服务器支持跨域）
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          return await response.text();
+        }
+      } catch (e) {
+        console.log('直接请求失败，尝试使用代理...');
+      }
+
+      // 尝试2：使用备用跨域代理
+      const proxies = [
+        'https://api.allorigins.win/get?url=',
+        'https://cors-anywhere.herokuapp.com/'
+      ];
+
+      for (const proxy of proxies) {
+        try {
+          let fullUrl;
+          if (proxy.includes('allorigins')) {
+            fullUrl = proxy + encodeURIComponent(url);
+            const response = await fetch(fullUrl);
+            if (!response.ok) continue;
+            const data = await response.json();
+            return data.contents;
+          } else {
+            fullUrl = proxy + url;
+            const response = await fetch(fullUrl);
+            if (response.ok) {
+              return await response.text();
+            }
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+
+      throw new Error('链接无法访问，请检查链接有效性或更换代理');
+    }
+
+    // 页面可见性处理
+    function handlePageVisibility() {
+      if (document.visibilityState === 'visible') {
+        checkTimeValidity();
+        if (!isInStoryMode && audioScreen.style.display === 'flex') {
+          audio.play().then(() => {
+            showToast('音频已恢复播放');
+          }).catch(err => {
+            showToast('点击继续播放音频');
+            document.body.addEventListener('click', resumeAudio, { once: true });
+          });
+        }
+      } else {
+        if (!isInStoryMode) {
+          audio.pause();
+        }
+      }
+    }
+
+    // 恢复音频播放
+    function resumeAudio() {
+      audio.play().then(() => {
+        showToast('音频已恢复播放');
+      }).catch(err => {
+        showToast('播放失败，请重试');
+        console.error('恢复播放失败：', err);
+      });
+    }
+
+    // 检查时间有效性
+    function checkTimeValidity() {
+      const now = new Date();
+      const currentHour = now.getHours();
+      if (currentHour >= startTime && currentHour < endTime) {
+        audioScreen.style.display = 'flex';
+        invalidTime.style.display = 'none';
+      } else {
+        audioScreen.style.display = 'none';
+        invalidTime.style.display = 'block';
+        audio.pause();
+        if (playTimer) clearInterval(playTimer);
+      }
+    }
+
+    // 结束阅读按钮
+    document.getElementById('storyBtn').addEventListener('click', () => {
+      if (remainingMessages <= 0) {
+        showToast('已无剩余消息');
+        remainingMessages = 5;
+        return;
+      }
+      document.getElementById('confirmModal').style.display = 'flex';
+    });
+
+    // 确认恢复收听
+    document.getElementById('confirmBtn').addEventListener('click', () => {
+      remainingMessages--;
+      localStorage.setItem('remainingMessages', remainingMessages);
+      updateRemainingCount();
+      
+      document.getElementById('confirmModal').style.display = 'none';
+      document.getElementById('storyScreen').style.display = 'none';
+      audioScreen.style.display = 'flex';
+      audio.volume = 1;
+      isInStoryMode = false;
+      
+      audio.play().catch(err => {
+        showToast('点击继续播放音频');
+        document.body.addEventListener('click', resumeAudio, { once: true });
+      });
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      document.getElementById('confirmModal').style.display = 'none';
+    });
+
+    function updateRemainingCount() {
+      remainingCountEl.textContent = remainingMessages;
+    }
+
+    function showToast(text) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = text;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    }
+  </script>
+</body>
+
+</html>
