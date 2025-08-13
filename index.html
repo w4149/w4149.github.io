@@ -1,505 +1,600 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>音频体验</title>
-  <style>
-    .guide-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      text-align: center;
-      padding: 20px;
-    }
-    .guide-text {
-      font-size: 18px;
-      margin-bottom: 30px;
-      line-height: 1.6;
-    }
-    .guide-btn {
-      background: #ff3b30;
-      color: white;
-      border: none;
-      padding: 15px 40px;
-      border-radius: 30px;
-      font-size: 17px;
-      cursor: pointer;
-    }
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #1a1a1a;
-      color: #fff;
-      height: 100vh;
-      overflow: hidden;
-      touch-action: manipulation;
-    }
-    .container {
-      width: 100%;
-      height: 100%;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-    .audio-screen {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      width: 100%;
-      text-align: center;
-    }
-    .audio-status {
-      font-size: 16px;
-      color: rgba(255,255,255,0.8);
-      margin-bottom: 60px;
-      line-height: 1.5;
-    }
-    .interrupt-btn {
-      background: #ff3b30;
-      color: white;
-      border: none;
-      padding: 16px 50px;
-      border-radius: 30px;
-      font-size: 18px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 20px;
-      min-width: 200px;
-      box-shadow: 0 4px 12px rgba(255,59,48,0.3);
-      transition: transform 0.2s;
-    }
-    .interrupt-btn:active {
-      transform: scale(0.95);
-    }
-    .story-screen {
-      display: none;
-      height: 100%;
-      width: 100%;
-      background: #fff;
-      border-radius: 16px;
-      padding: 24px;
-      position: relative;
-      color: #333;
-    }
-    .story-content {
-      height: calc(100% - 100px);
-      overflow-y: auto;
-      font-size: 17px;
-      line-height: 1.8;
-      padding-right: 8px;
-    }
-    .story-btn {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #007aff;
-      color: white;
-      border: none;
-      padding: 14px 40px;
-      border-radius: 30px;
-      font-size: 17px;
-      font-weight: 600;
-      cursor: pointer;
-      min-width: 180px;
-    }
-    .confirm-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
-      padding: 0 20px;
-    }
-    .modal-content {
-      background: white;
-      padding: 28px 20px;
-      border-radius: 16px;
-      width: 100%;
-      max-width: 320px;
-    }
-    .modal-text {
-      font-size: 17px;
-      color: #333;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    .modal-btns {
-      display: flex;
-      justify-content: space-around;
-      gap: 10px;
-    }
-    .modal-btn {
-      padding: 10px 0;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 17px;
-      flex: 1;
-      margin: 0 5px;
-    }
-    .cancel-btn {
-      background: #f2f2f7;
-      color: #333;
-    }
-    .confirm-btn {
-      background: #ff3b30;
-      color: white;
-    }
-    .invalid-time {
-      display: none;
-      text-align: center;
-      color: rgba(255,255,255,0.8);
-      font-size: 17px;
-      padding: 20px;
-    }
-    .toast {
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      border-radius: 20px;
-      font-size: 15px;
-      z-index: 50;
-    }
-    .timer-display {
-      font-size: 14px;
-      color: rgba(255,255,255,0.6);
-      margin-top: 20px;
-    }
-    /* 加载状态样式 */
-    .loading {
-      text-align: center;
-      padding: 40px 0;
-      color: #666;
-    }
-    .error-message {
-      text-align: center;
-      padding: 40px 0;
-      color: #ff3b30;
-    }
-  </style>
-</head>
-
-<body>
-  <!-- 引导层 -->
-  <div class="guide-overlay" id="guideOverlay">
-    <div class="guide-text">
-      请点击下方按钮授权音频播放<br>
-      （浏览器需要您的允许才能播放声音）
-    </div>
-    <button class="guide-btn" id="guideBtn">授权并开始</button>
-  </div>
-
-  <div class="container">
-    <!-- 非有效时间提示 -->
-    <div class="invalid-time" id="invalidTime">
-      当前时段无法收听<br>
-      有效时间：每天 09:00-22:00
-    </div>
-
-    <!-- 音频界面 -->
-    <div class="audio-screen" id="audioScreen">
-      <div class="audio-status" id="audioStatus">正在播放...</div>
-      <button class="interrupt-btn" id="interruptBtn">打断</button>
-      <div class="timer-display" id="timerDisplay">已播放：00:00</div>
-      <!-- 音频标签 -->
-      <audio id="audio" src="https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/%E4%B8%BA%E4%BB%80%E4%B9%88%E6%88%91%E4%BB%AC%E5%BE%88%E9%9A%BE%E5%9B%9E%E7%AD%94%E2%80%9C%E7%94%9F%E6%B4%BB%E7%9A%84%E6%84%8F%E4%B9%89%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F%E2%80%9D%20%E2%80%94%E2%80%94%E9%98%BF%E5%A4%9A%E8%AF%BA%E7%9A%84%E6%8A%BD%E8%B1%A1%E8%99%9A%E6%97%A0%E4%B8%BB%E4%B9%89%E6%89%B9%E5%88%A4.mp3" loop></audio>
-    </div>
-
-    <!-- 故事文本界面（从TXT链接加载内容） -->
-    <div class="story-screen" id="storyScreen">
-      <div class="story-content" id="storyContent">
-        <!-- 内容将从TXT链接加载 -->
-      </div>
-      <button class="story-btn" id="storyBtn">结束阅读（恢复收听）</button>
-    </div>
-
-    <!-- 确认弹窗 -->
-    <div class="confirm-modal" id="confirmModal">
-      <div class="modal-content">
-        <div class="modal-text" id="modalText">
-          使用打断将消耗1条消息<br>
-          当前剩余：<span id="remainingCount">5</span>条<br>
-          确定要打断吗？
-        </div>
-        <div class="modal-btns">
-          <button class="modal-btn cancel-btn" id="cancelBtn">否</button>
-          <button class="modal-btn confirm-btn" id="confirmBtn">是</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const audio = document.getElementById('audio');
-    const guideOverlay = document.getElementById('guideOverlay');
-    const guideBtn = document.getElementById('guideBtn');
-    const audioScreen = document.getElementById('audioScreen');
-    const invalidTime = document.getElementById('invalidTime');
-    const remainingCountEl = document.getElementById('remainingCount');
-    const timerDisplay = document.getElementById('timerDisplay');
-    const interruptBtn = document.getElementById('interruptBtn');
-    const storyContent = document.getElementById('storyContent');
-    
-    // 有效时间：早9点至晚10点
-    const startTime = 9;
-    const endTime = 22;
-    let remainingMessages = 5;
-    let isInStoryMode = false;
-    // 计时器相关变量
-    let playTimer = null;
-    let elapsedSeconds = 0;
-    const interruptTimes = [120, 300]; // 2分钟、5分钟自动打断
-    let hasInterruptedAt2min = false;
-    let hasInterruptedAt5min = false;
-    
-    // 请在此处填写TXT文档的网络链接
-    const txtUrl = "https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/%E6%96%87%E6%9C%AC%E6%B5%8B%E8%AF%95%E6%96%87%E4%BB%B6.txt"; // 例如："https://example.com/content.txt"
-
-    window.onload = () => {
-      const savedCount = localStorage.getItem('remainingMessages');
-      if (savedCount) remainingMessages = parseInt(savedCount);
-      updateRemainingCount();
-      
-      guideBtn.addEventListener('click', async () => {
-        guideOverlay.style.display = 'none';
-        checkTimeValidity();
-        try {
-          await audio.play();
-          startPlayTimer();
-          showToast('音频开始播放');
-        } catch (err) {
-          showToast('播放失败，请检查音频链接或权限');
-          console.error('音频错误：', err);
-        }
-      });
-
-      document.addEventListener('visibilitychange', handlePageVisibility);
-      interruptBtn.addEventListener('click', handleInterrupt);
-    };
-
-    // 开始播放计时器
-    function startPlayTimer() {
-      if (playTimer) clearInterval(playTimer);
-      playTimer = setInterval(() => {
-        if (!isInStoryMode && !audio.paused) {
-          elapsedSeconds++;
-          updateTimerDisplay();
-          checkAutoInterrupt();
-        }
-      }, 1000);
-    }
-
-    // 更新计时器显示
-    function updateTimerDisplay() {
-      const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
-      const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
-      timerDisplay.textContent = `已播放：${minutes}:${seconds}`;
-    }
-
-    // 检查自动打断
-    function checkAutoInterrupt() {
-      if (!hasInterruptedAt2min && elapsedSeconds >= interruptTimes[0]) {
-        hasInterruptedAt2min = true;
-        handleInterrupt();
-      } else if (!hasInterruptedAt5min && elapsedSeconds >= interruptTimes[1]) {
-        hasInterruptedAt5min = true;
-        handleInterrupt();
-      }
-    }
-
-    // 处理打断（加载TXT内容）
-    async function handleInterrupt() {
-      if (audio.paused || isInStoryMode) return;
-      
-      // 显示加载状态
-      storyContent.innerHTML = '<div class="loading">正在加载文本内容...</div>';
-      
-      // 执行打断基础逻辑
-      audio.volume = 0;
-      audioScreen.style.display = 'none';
-      document.getElementById('storyScreen').style.display = 'block';
-      isInStoryMode = true;
-      
-      // 加载TXT内容
-      if (!txtUrl) {
-        storyContent.innerHTML = '<div class="error-message">请先填写TXT文档链接</div>';
-        return;
-      }
-      
-      try {
-        const text = await loadTxtContent(txtUrl);
-        // 处理换行：将所有换行符替换为<br>标签，并保留段落间距
-        const formattedText = text
-          .replace(/\r\n/g, '\n') // 统一换行符（处理Windows格式）
-          .replace(/\n\n+/g, '</p><p>') // 连续换行视为段落分隔
-          .replace(/\n/g, '<br>'); // 单个换行视为换行
-        // 用p标签包裹内容，增强段落间距
-        storyContent.innerHTML = `<p>${formattedText}</p>`;
-      } catch (err) {
-        storyContent.innerHTML = `<div class="error-message">加载失败：${err.message}</div>`;
-        console.error('TXT加载错误：', err);
-      }
-    }
-
-    // 加载TXT文档内容（优化跨域逻辑）
-    async function loadTxtContent(url) {
-      // 尝试1：直接请求（如果目标服务器支持跨域）
-      try {
-        const response = await fetch(url);
-        if (response.ok) {
-          return await response.text();
-        }
-      } catch (e) {
-        console.log('直接请求失败，尝试使用代理...');
-      }
-
-      // 尝试2：使用备用跨域代理
-      const proxies = [
-        'https://api.allorigins.win/get?url=',
-        'https://cors-anywhere.herokuapp.com/'
-      ];
-
-      for (const proxy of proxies) {
-        try {
-          let fullUrl;
-          if (proxy.includes('allorigins')) {
-            fullUrl = proxy + encodeURIComponent(url);
-            const response = await fetch(fullUrl);
-            if (!response.ok) continue;
-            const data = await response.json();
-            return data.contents;
-          } else {
-            fullUrl = proxy + url;
-            const response = await fetch(fullUrl);
-            if (response.ok) {
-              return await response.text();
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能对话系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            /* 滚动条样式优化 */
+            .scrollable-area {
+                scrollbar-width: thin;
             }
-          }
-        } catch (e) {
-          continue;
+            .scrollable-area::-webkit-scrollbar {
+                width: 6px;
+            }
+            .scrollable-area::-webkit-scrollbar-thumb {
+                background-color: rgba(0,0,0,0.2);
+                border-radius: 3px;
+            }
+            
+            /* 加载状态样式 */
+            .loading {
+                color: #6B7280;
+                font-style: italic;
+            }
+            
+            /* 消息头像样式 */
+            .message-avatar {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+            
+            /* 左侧面板布局 */
+            .left-panel {
+                width: 320px;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            /* 一寸照比例头像容器 (3:4) */
+            .id-photo-container {
+                flex: 3;
+                min-height: 240px;
+                background-color: #f0f2f5;
+                overflow: hidden;
+                border-radius: 0.75rem;
+            }
+            
+            /* 矩形头像样式 */
+            .rect-avatar {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+            
+            /* 输入框区域样式 */
+            .input-panel {
+                flex: 2;
+                min-height: 180px;
+            }
+
+            /* 恐龙游戏样式 */
+            .dino-game-container {
+                margin-top: 1rem;
+                border: 1px solid #e0e0e0;
+                border-radius: 0.5rem;
+                overflow: hidden;
+                background-color: #fafafa;
+                cursor: pointer; /* 显示点击指针 */
+            }
+            .game-info {
+                padding: 0.5rem 1rem;
+                background-color: #f0f0f0;
+                display: flex;
+                justify-content: flex-end;
+                font-size: 0.875rem;
+            }
+            #gameCanvas {
+                width: 100%;
+                height: 150px;
+                background-color: #ffffff;
+            }
         }
-      }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen p-4 md:p-6">
+    <div class="container mx-auto max-w-6xl">
+        <!-- 主容器：左右布局 -->
+        <div class="flex flex-col md:flex-row gap-6 h-[600px]">
+            <!-- 左侧区域：头像 + 输入框 -->
+            <div class="left-panel">
+                <!-- 左侧上部：一寸照比例头像 -->
+                <div class="id-photo-container shadow-md">
+                    <img id="main-avatar" 
+                         src="https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO.png" 
+                         alt="智能助手头像" 
+                         class="rect-avatar"
+                         onerror="this.src='https://picsum.photos/seed/robot/400/533'">
+                </div>
 
-      throw new Error('链接无法访问，请检查链接有效性或更换代理');
-    }
+                <!-- 左侧下部：输入框区域 -->
+                <div class="input-panel bg-white rounded-xl shadow-md p-5 flex flex-col">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">输入消息</h3>
+                    <textarea id="input-area" 
+                              class="flex-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none" 
+                              placeholder="请输入您的问题..."></textarea>
+                </div>
+            </div>
 
-    // 页面可见性处理
-    function handlePageVisibility() {
-      if (document.visibilityState === 'visible') {
-        checkTimeValidity();
-        if (!isInStoryMode && audioScreen.style.display === 'flex') {
-          audio.play().then(() => {
-            showToast('音频已恢复播放');
-          }).catch(err => {
-            showToast('点击继续播放音频');
-            document.body.addEventListener('click', resumeAudio, { once: true });
-          });
+            <!-- 右侧区域：对话记录 -->
+            <div class="flex-1 bg-white rounded-xl shadow-md p-5 flex flex-col">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">对话记录</h3>
+                <div id="dialog-container" class="scrollable-area flex-1 overflow-y-auto p-2 space-y-4">
+                    <div class="text-gray-400 text-center py-8">
+                        开始您的对话吧
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部恐龙游戏区域 -->
+        <div class="dino-game-container mt-6">
+            <div class="game-info">
+                <span id="score">0</span>
+            </div>
+            <canvas id="gameCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================
+        // 聊天功能相关代码
+        // ==============================================
+        
+        // 定义两组头像资源
+        const avatarSets = {
+            set1: {
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO_Thinking.png'
+            },
+            set2: {
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageGROK.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageGROK_Thinking.png'
+            },
+            set3: {
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK_Thinking.png'
+            },
+            set4: {
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageROBOT.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageROBOT_Thinking.png'
+            }
+        };
+
+        // 用户头像（固定）
+        const userAvatar = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzYiIGhlaWdodD0iMzYiIHZpZXdCb3g9IjAgMCAzNiAzNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjE4IiByPSIxOCIgc3Ryb2tlPSIjMDAwIiBzdHJva2Utd2lkdGg9IjEiLz48L3N2Zz4=';
+        
+        // 当前使用的头像组（动态切换）
+        let currentAvatarSet = avatarSets.set1;
+
+        // DOM元素引用
+        const inputArea = document.getElementById('input-area');
+        const dialogContainer = document.getElementById('dialog-container');
+        const mainAvatar = document.getElementById('main-avatar');
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 回车键发送消息（Shift+Enter换行）
+            inputArea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessageFromInput();
+                }
+            });
         }
-      } else {
-        if (!isInStoryMode) {
-          audio.pause();
+
+        // 从输入框发送消息
+        function sendMessageFromInput() {
+            const text = inputArea.value.trim();
+            if (text) {
+                sendMessage(text);
+                inputArea.value = '';
+            }
         }
-      }
-    }
 
-    // 恢复音频播放
-    function resumeAudio() {
-      audio.play().then(() => {
-        showToast('音频已恢复播放');
-      }).catch(err => {
-        showToast('播放失败，请重试');
-        console.error('恢复播放失败：', err);
-      });
-    }
+        // 发送消息并处理流程
+        async function sendMessage(text) {
+            // 生成1-100的随机数并选择头像组
+            const randomNum = Math.floor(Math.random() * 100) + 1;
+            currentAvatarSet = randomNum < 20 ? avatarSets.set1 : 
+                            (
+                                randomNum < 40 ? avatarSets.set2 : 
+                                (
+                                    randomNum < 60 ? avatarSets.set3 : avatarSets.set4
+                                )
+                            );
+            
+            // 添加用户消息到对话记录
+            addToDialog('user', text);
+            
+            // 切换到思考状态
+            setThinkingState(true);
+            
+            // 添加"正在思考"提示
+            const loadingId = `loading-${Date.now()}`;
+            addToDialog('ai', '正在思考...', false, loadingId);
+            
+            try {
+                // 调用API获取回复
+                const response = await callAssistantAPI(text);
+                
+                // 显示回复并恢复正常状态
+                removeLoadingItem(loadingId);
+                addToDialog('ai', response);
+                setThinkingState(false);
+            } catch (error) {
+                // 处理错误
+                removeLoadingItem(loadingId);
+                addToDialog('ai', `获取回复失败：${error.message}`, true);
+                setThinkingState(false);
+            }
+        }
 
-    // 检查时间有效性
-    function checkTimeValidity() {
-      const now = new Date();
-      const currentHour = now.getHours();
-      if (currentHour >= startTime && currentHour < endTime) {
-        audioScreen.style.display = 'flex';
-        invalidTime.style.display = 'none';
-      } else {
-        audioScreen.style.display = 'none';
-        invalidTime.style.display = 'block';
-        audio.pause();
-        if (playTimer) clearInterval(playTimer);
-      }
-    }
+        // 切换思考状态头像
+        function setThinkingState(isThinking) {
+            mainAvatar.src = isThinking ? currentAvatarSet.thinking : currentAvatarSet.normal;
+            mainAvatar.onerror = () => {
+                mainAvatar.src = 'https://picsum.photos/seed/robot/400/533';
+            };
+        }
 
-    // 结束阅读按钮
-    document.getElementById('storyBtn').addEventListener('click', () => {
-      if (remainingMessages <= 0) {
-        showToast('已无剩余消息');
-        remainingMessages = 5;
-        return;
-      }
-      document.getElementById('confirmModal').style.display = 'flex';
-    });
+        // 调用助手API
+        async function callAssistantAPI(query) {
+            // 替换为实际API密钥
+            const API_KEY = "sk-807f33ba0ae34437bf69c195d5068570";
+            const API_URL = "https://api.deepseek.com/chat/completions";
+            
+            const requestData = {
+                model: "deepseek-chat",
+                messages: [{ role: "user", content: query }],
+                temperature: 0.7,
+                max_tokens: 1024
+            };
+            
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error?.message || `HTTP错误: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data.choices?.[0]?.message?.content || "未获取到有效回复";
+        }
 
-    // 确认恢复收听
-    document.getElementById('confirmBtn').addEventListener('click', () => {
-      remainingMessages--;
-      localStorage.setItem('remainingMessages', remainingMessages);
-      updateRemainingCount();
-      
-      document.getElementById('confirmModal').style.display = 'none';
-      document.getElementById('storyScreen').style.display = 'none';
-      audioScreen.style.display = 'flex';
-      audio.volume = 1;
-      isInStoryMode = false;
-      
-      audio.play().catch(err => {
-        showToast('点击继续播放音频');
-        document.body.addEventListener('click', resumeAudio, { once: true });
-      });
-    });
+        // 添加内容到对话记录
+        function addToDialog(role, content, isError = false, id = null) {
+            const dialogDiv = document.createElement('div');
+            dialogDiv.className = `dialog-item flex gap-3 p-2 transition-all ${id || ''}`;
+            
+            // 确定头像和样式
+            const roleClass = role === 'user' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-gray-800';
+            const avatarSrc = role === 'user' 
+                ? userAvatar 
+                : (content === '正在思考...' ? currentAvatarSet.thinking : currentAvatarSet.normal);
+            
+            dialogDiv.innerHTML = `
+                <img src="${avatarSrc}" 
+                     alt="${role === 'user' ? '用户' : '智能助手'}" 
+                     class="message-avatar mt-1"
+                     onerror="this.src='${role === 'user' ? userAvatar : 'https://picsum.photos/seed/robot/36/36'}'">
+                <div class="flex-1 max-w-[85%]">
+                    <div class="p-3 rounded-lg ${roleClass} break-words">${content}</div>
+                </div>
+            `;
+            
+            // 加载状态样式
+            if (content === '正在思考...') {
+                dialogDiv.classList.add('loading');
+            }
+            
+            // 错误状态样式
+            if (isError) {
+                const messageEl = dialogDiv.querySelector('div.rounded-lg');
+                messageEl.classList.remove('bg-green-50', 'text-gray-800');
+                messageEl.classList.add('bg-red-50', 'text-red-600');
+            }
+            
+            // 移除初始提示文本
+            const initialPrompt = dialogContainer.querySelector('.text-gray-400');
+            if (initialPrompt) {
+                dialogContainer.removeChild(initialPrompt);
+            }
+            
+            // 添加到对话容器并滚动到底部
+            dialogContainer.appendChild(dialogDiv);
+            dialogContainer.scrollTop = dialogContainer.scrollHeight;
+        }
 
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-      document.getElementById('confirmModal').style.display = 'none';
-    });
+        // 移除加载提示
+        function removeLoadingItem(id) {
+            const loadingItem = document.querySelector(`.${id}`);
+            if (loadingItem) {
+                loadingItem.remove();
+            }
+        }
 
-    function updateRemainingCount() {
-      remainingCountEl.textContent = remainingMessages;
-    }
+        // ==============================================
+        // 恐龙跳跃游戏相关代码（仙人掌替换为图片）
+        // ==============================================
+        
+        // 游戏状态枚举
+        const GameState = {
+            NOT_STARTED: 0,  // 未开始
+            RUNNING: 1,      // 运行中
+            OVER: 2          // 已结束
+        };
+        
+        // 障碍物图片加载
+        const obstacleImage = new Image();
+        obstacleImage.src = "https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/theother_XUBINGstyle.png";
+        let imageLoaded = false;
+        
+        // 图片加载完成事件
+        obstacleImage.onload = function() {
+            imageLoaded = true;
+        };
+        
+        // 图片加载失败时使用默认样式
+        obstacleImage.onerror = function() {
+            console.log("障碍物图片加载失败，将使用默认样式");
+            imageLoaded = false;
+        };
+        
+        // 游戏变量
+        let canvas, ctx;
+        let dino = {
+            x: 50,
+            y: 0,
+            width: 40,
+            height: 40,
+            velocityY: 0,
+            jumping: false,
+            gravity: 0.6,
+            jumpStrength: -12
+        };
+        
+        let obstacles = [];
+        let score = 0;
+        let gameSpeed = 5;
+        let gameState = GameState.NOT_STARTED; // 初始状态为未开始
+        let animationId;
+        let obstacleTimer;
+        let groundHeight = 10; // 地面高度
 
-    function showToast(text) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = text;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
-    }
-  </script>
+        // 初始化游戏
+        function initGame() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // 设置canvas尺寸
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            // 重置游戏状态
+            resetGame();
+            
+            // 点击游戏区域开始游戏
+            canvas.addEventListener('click', () => {
+                if (gameState === GameState.NOT_STARTED || gameState === GameState.OVER) {
+                    resetGame();
+                    gameState = GameState.RUNNING;
+                    obstacleTimer = setInterval(createObstacle, 1500);
+                }
+            });
+            
+            // 监听空格键跳跃（仅在游戏运行中有效）
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && gameState === GameState.RUNNING) {
+                    e.preventDefault();
+                    if (!dino.jumping) {
+                        dino.jumping = true;
+                        dino.velocityY = dino.jumpStrength;
+                    }
+                }
+            });
+            
+            // 开始游戏循环
+            gameLoop();
+        }
+
+        // 重置游戏
+        function resetGame() {
+            // 重置恐龙状态（站在地面上）
+            const groundY = canvas.height - groundHeight - dino.height;
+            dino.y = groundY;
+            dino.velocityY = 0;
+            dino.jumping = false;
+            
+            // 清空障碍物
+            obstacles = [];
+            if (obstacleTimer) clearInterval(obstacleTimer);
+            
+            // 重置游戏状态
+            score = 0;
+            gameSpeed = 5;
+            gameState = GameState.NOT_STARTED;
+            document.getElementById('score').textContent = '0';
+        }
+
+        // 创建障碍物（保持原有尺寸）
+        function createObstacle() {
+            if (gameState !== GameState.RUNNING) return;
+            
+            // 保持原有仙人掌尺寸范围
+            const minHeight = 30;
+            const maxHeight = 60;
+            const height = Math.random() * (maxHeight - minHeight) + minHeight;
+            const width = 20; // 保持原有宽度
+            
+            // 计算障碍物Y坐标，使其立在地面上
+            const obstacleY = canvas.height - groundHeight - height;
+            
+            obstacles.push({
+                x: canvas.width,
+                y: obstacleY,
+                width: width,
+                height: height
+            });
+        }
+
+        // 更新游戏状态
+        function update() {
+            if (gameState !== GameState.RUNNING) return;
+            
+            // 更新分数
+            score++;
+            document.getElementById('score').textContent = score.toString();
+            
+            // 加速游戏
+            if (score % 100 === 0) {
+                gameSpeed += 0.2;
+            }
+            
+            // 更新恐龙位置（重力和跳跃）
+            dino.velocityY += dino.gravity;
+            dino.y += dino.velocityY;
+            
+            // 地面碰撞检测
+            const groundY = canvas.height - groundHeight - dino.height;
+            if (dino.y >= groundY) {
+                dino.y = groundY;
+                dino.velocityY = 0;
+                dino.jumping = false;
+            }
+            
+            // 更新障碍物位置
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].x -= gameSpeed;
+                
+                // 移除超出画布的障碍物
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    i--;
+                }
+            }
+            
+            // 碰撞检测（保持不变，因为尺寸未变）
+            checkCollision();
+        }
+
+        // 碰撞检测
+        function checkCollision() {
+            // 恐龙的碰撞边界
+            const dinoLeft = dino.x;
+            const dinoRight = dino.x + dino.width;
+            const dinoTop = dino.y;
+            const dinoBottom = dino.y + dino.height;
+            
+            for (let obstacle of obstacles) {
+                // 障碍物的碰撞边界（保持原有尺寸）
+                const obstacleLeft = obstacle.x;
+                const obstacleRight = obstacle.x + obstacle.width;
+                const obstacleTop = obstacle.y;
+                const obstacleBottom = obstacle.y + obstacle.height;
+                
+                // 精确的碰撞检测
+                if (dinoRight > obstacleLeft && 
+                    dinoLeft < obstacleRight && 
+                    dinoBottom > obstacleTop && 
+                    dinoTop < obstacleBottom) {
+                    gameState = GameState.OVER; // 游戏结束
+                    clearInterval(obstacleTimer);
+                    return;
+                }
+            }
+        }
+
+        // 绘制游戏
+        function draw() {
+            // 清空画布
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制地面
+            ctx.fillStyle = '#e0e0e0';
+            const groundY = canvas.height - groundHeight;
+            ctx.fillRect(0, groundY, canvas.width, groundHeight);
+            
+            // 绘制恐龙
+            ctx.fillStyle = '#333';
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+            
+            // 绘制眼睛
+            ctx.fillStyle = 'white';
+            ctx.fillRect(dino.x + dino.width - 10, dino.y + 10, 5, 5);
+            
+            // 绘制障碍物（使用图片，保持原有尺寸）
+            if (imageLoaded) {
+                for (let obstacle of obstacles) {
+                    // 绘制图片，调整图片尺寸以匹配原有仙人掌尺寸
+                    ctx.drawImage(
+                        obstacleImage, 
+                        obstacle.x, 
+                        obstacle.y, 
+                        obstacle.width, 
+                        obstacle.height
+                    );
+                }
+            } else {
+                // 图片未加载时使用默认绿色矩形
+                ctx.fillStyle = '#4CAF50';
+                for (let obstacle of obstacles) {
+                    ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                }
+            }
+            
+            // 游戏未开始时显示提示
+            /*
+            if (gameState === GameState.NOT_STARTED) {
+                ctx.fillStyle = 'rgba(100, 100, 100, 0.7)';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('点击开始游戏', canvas.width / 2, canvas.height / 2);
+            }
+            */
+            // 游戏结束时显示提示
+            /*
+            else if (gameState === GameState.OVER) {
+                ctx.fillStyle = 'rgba(150, 150, 150, 0.5)';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('the Other', canvas.width / 2, canvas.height / 2);
+            }
+            */
+        }
+
+        // 游戏主循环
+        function gameLoop() {
+            update();
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // 初始化应用
+        function initApp() {
+            initEventListeners();
+            initGame();
+            
+            // 监听窗口大小变化，调整canvas尺寸
+            window.addEventListener('resize', () => {
+                canvas.width = canvas.offsetWidth;
+                canvas.height = canvas.offsetHeight;
+                // 重新计算恐龙和障碍物位置以适应新尺寸
+                const groundY = canvas.height - groundHeight - dino.height;
+                dino.y = groundY;
+                
+                obstacles.forEach(obstacle => {
+                    obstacle.y = canvas.height - groundHeight - obstacle.height;
+                });
+            });
+        }
+
+        // 启动应用
+        initApp();
+    </script>
 </body>
-
 </html>
