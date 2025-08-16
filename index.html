@@ -85,6 +85,43 @@
                 height: 150px;
                 background-color: #ffffff;
             }
+            
+            /* 全黑页面样式 */
+            .black-screen {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: black;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+                cursor: pointer;
+            }
+            
+            /* 打字机效果容器 */
+            .typewriter-container {
+                font-size: 2rem;
+                color: white;
+                position: relative;
+            }
+            
+            /* 光标样式 */
+            .typewriter-cursor {
+                display: inline-block;
+                width: 2px;
+                height: 2.2rem;
+                background-color: white;
+                margin-left: 4px;
+                animation: blink 1s infinite;
+            }
+            
+            @keyframes blink {
+                0%, 49% { opacity: 1; }
+                50%, 100% { opacity: 0; }
+            }
         }
     </style>
 </head>
@@ -97,7 +134,7 @@
                 <!-- 左侧上部：一寸照比例头像 -->
                 <div class="id-photo-container shadow-md">
                     <img id="main-avatar" 
-                         src="https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO.png" 
+                         src="https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageROBOTPIXEL.png" 
                          alt="智能助手头像" 
                          class="rect-avatar"
                          onerror="this.src='https://picsum.photos/seed/robot/400/533'">
@@ -139,25 +176,52 @@
         
         // 定义两组头像资源
         const avatarSets = {
+
             set1: {
-                text: '请以温柔助手的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
-                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO.png',
-                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO_Thinking.png'
+                text: '请回答下面问题，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageROBOTPIXEL.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageROBOTPIXEL.png'
             },
             set2: {
-                text: '请以积极乐观青年的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
-                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageGROK.png',
-                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageGROK_Thinking.png'
+                text: '请回答下面问题，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageWHITEWOMANPIXEL.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageWHITEWOMANPIXEL.png'
             },
             set3: {
-                text: '请以对科技有一定信心的技术人士的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
-                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK.png',
-                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK_Thinking.png'
+                text: '请回答下面问题，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageBLACKMANPIXEL.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageBLACKMANPIXEL.png'
             },
             set4: {
                 text: '请以严谨理性的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
                 normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageROBOT.png',
                 thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageROBOT_Thinking.png'
+            },
+            set5: {
+                text: '请以白人女性的语言方式回答下面问题（请用中文回答），但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageWHITEWOMAN.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageWHITEWOMAN.png'
+            },
+            set6: {
+                text: '请以黑人男性的语言方式回答下面问题（请用中文回答），但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageBLACKMAN.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageBLACKMAN.png'
+            },
+            set7: {
+                text: '请以温柔助手的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageDOUBAO_Thinking.png'
+            },
+            set8: {
+                text: '请以积极乐观青年的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageGROK.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageGROK_Thinking.png'
+            },
+            set9: {
+                text: '请以对科技有一定信心的技术人士的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK_Thinking.png'
             }
         };
 
@@ -166,6 +230,12 @@
         
         // 当前使用的头像组（动态切换）
         let currentAvatarSet = avatarSets.set1;
+
+        // 对话历史数组，用于保存上下文
+        let conversationHistory = [];
+        
+        // 提问计数器
+        let questionCounter = 0;
 
         // DOM元素引用
         const inputArea = document.getElementById('input-area');
@@ -194,15 +264,48 @@
 
         // 发送消息并处理流程
         async function sendMessage(text) {
-            // 生成1-100的随机数并选择头像组
-            const randomNum = Math.floor(Math.random() * 100) + 1;
-            currentAvatarSet = randomNum < 20 ? avatarSets.set1 : 
-                            (
-                                randomNum < 40 ? avatarSets.set2 : 
-                                (
-                                    randomNum < 60 ? avatarSets.set3 : avatarSets.set4
-                                )
-                            );
+            // 提问计数器加1
+            questionCounter++;
+            
+            // 根据提问次数选择头像组
+            if (questionCounter === 1) {
+                currentAvatarSet = avatarSets.set1;
+            } else if (questionCounter === 2) {
+                currentAvatarSet = avatarSets.set1;
+            } else if (questionCounter === 3) {
+                currentAvatarSet = avatarSets.set1;
+            } else if (questionCounter === 4) {
+                currentAvatarSet = avatarSets.set1;
+            } else if (questionCounter === 5) {
+                currentAvatarSet = avatarSets.set2;
+            } else if (questionCounter === 6) {
+                currentAvatarSet = avatarSets.set2;
+            } else if (questionCounter === 7) {
+                currentAvatarSet = avatarSets.set3;
+            } else if (questionCounter === 8) {
+                currentAvatarSet = avatarSets.set3;
+            } else if (questionCounter === 9) {
+                currentAvatarSet = avatarSets.set4;
+            } else if (questionCounter === 10) {
+                currentAvatarSet = avatarSets.set5;
+            } else if (questionCounter === 11) { 
+                currentAvatarSet = avatarSets.set6;
+            } else if (questionCounter === 12) {
+                currentAvatarSet = avatarSets.set7;
+            } else if (questionCounter === 13) {
+                currentAvatarSet = avatarSets.set8;
+            } else {
+                currentAvatarSet = avatarSets.set9;
+            }
+
+
+
+
+
+
+
+
+
             
             // 在输入问题前添加限定
             wholeText = currentAvatarSet.text + text;
@@ -217,19 +320,403 @@
             addToDialog('ai', '正在思考...', false, loadingId);
             
             try {
-                // 调用API获取回复
-                const response = await callAssistantAPI(wholeText);
-                
-                // 显示回复并恢复正常状态
-                removeLoadingItem(loadingId);
-                addToDialog('ai', response);
-                setThinkingState(false);
+                // 检查消息是否包含"需要多久"
+                if (text.includes("需要多久")) {
+                    // 不调用API，保持思考状态，直到下一次输入
+                    // 不执行任何移除loading元素或设置thinking state为false的操作
+                    return;
+                }
+                // 检查消息是否同时包含"单身"、"小狗"、"仪式"
+                else if (text.includes("单身") && text.includes("小狗") && text.includes("仪式")) {
+                    // 保持"正在思考"状态5秒后再显示回复
+                    setTimeout(() => {
+                        removeLoadingItem(loadingId);
+                        addToDialog('ai', '是否开始生成报告？');
+                        setThinkingState(false);
+                    }, 3000);
+                    // 不调用API，直接返回，让延迟函数执行
+                    return;
+                }
+                // 检查消息是否包含"丝巾"
+                else if (text.includes("丝巾")) {
+
+                    // 假装处理，不调用API
+                    await simulateReportGeneration(loadingId);
+                } else {
+                    // 检查消息是否包含"单人床"
+                    let apiText = wholeText;
+                    if (text.includes("单人床")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到“极简主义”这个词。）";
+                    } else if (text.includes("长发") && text.includes("赤脚")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到“创意从业者”和“艺术家”这两个词。）";
+                    } else if (text.includes("艺术家")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：疲惫感还可能因为她是一个上班族，在业余时间做一些艺术创作。）";
+                    } else if (text.includes("上班族") || text.includes("一本书") || text.includes("工作消息")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：需要提供更多的信息。）";
+                    } else if (text.includes("田野方法")) {
+                        apiText = wholeText + "（正常输出回复，但是要首先提到：技术带来的帮助。）";
+                    } else if (text.includes("宠物")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：宠物的陪伴提供安全感，人与小动物更容易建立亲密。）";
+                    } else if (text.includes("创作母题")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：心理机制。）";
+                    } else if (text.includes("出门")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：文艺演出。）";
+                    } 
+
+                    
+                    // 正常调用API获取回复
+                    const response = await callAssistantAPI(apiText);
+                    
+                    // 保存对话历史（用户消息和AI回复）
+                    conversationHistory.push({ role: "user", content: wholeText });
+                    conversationHistory.push({ role: "assistant", content: response });
+                    
+                    // 显示回复并恢复正常状态
+                    removeLoadingItem(loadingId);
+                    addToDialog('ai', response);
+                    setThinkingState(false);
+                }
             } catch (error) {
                 // 处理错误
                 removeLoadingItem(loadingId);
                 addToDialog('ai', `获取回复失败：${error.message}`, true);
                 setThinkingState(false);
             }
+        }
+        
+        // 模拟报告生成过程
+        async function simulateReportGeneration(loadingId) {
+            // 首先将"正在思考..."替换为"生成中..."
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            removeLoadingItem(loadingId);
+            
+            const generatingId = `generating-${Date.now()}`;
+            addToDialog('ai', '最终报告生成中...', false, generatingId);
+            
+            // 20秒后创建全黑页面
+            await new Promise(resolve => setTimeout(resolve, 19000));
+            
+            // 移除生成中提示
+            removeLoadingItem(generatingId);
+            setThinkingState(false);
+            
+            // 创建全黑页面
+            createBlackScreen();
+        }
+        
+        // 创建全黑页面并显示打字效果
+        function createBlackScreen() {
+            const blackScreen = document.createElement('div');
+            blackScreen.className = 'black-screen';
+            
+            const typewriterContainer = document.createElement('div');
+            typewriterContainer.className = 'typewriter-container';
+            
+            const textElement = document.createElement('span');
+            textElement.textContent = '';
+            
+            const cursorElement = document.createElement('span');
+            cursorElement.className = 'typewriter-cursor';
+            
+            typewriterContainer.appendChild(textElement);
+            typewriterContainer.appendChild(cursorElement);
+            blackScreen.appendChild(typewriterContainer);
+            
+            document.body.appendChild(blackScreen);
+            
+            // 打字机效果
+            const message = '报告已生成，点击屏幕查看';
+            let index = 0;
+            
+            function type() {
+                if (index < message.length) {
+                    textElement.textContent += message.charAt(index);
+                    index++;
+                    setTimeout(type, 200); // 每个字符显示的间隔时间
+                }
+            }
+            
+            // 开始打字效果
+            type();
+            
+            // 点击屏幕后显示对话内容乱序随机节选并组成人脸形状
+            blackScreen.addEventListener('click', function() {
+                // 清空屏幕内容
+                blackScreen.innerHTML = '';
+                blackScreen.style.display = 'flex';
+                blackScreen.style.flexWrap = 'wrap';
+                blackScreen.style.justifyContent = 'center';
+                blackScreen.style.alignContent = 'center';
+                blackScreen.style.padding = '20px';
+                
+                // 获取所有对话内容文本
+                const allMessages = Array.from(dialogContainer.querySelectorAll('.dialog-item'))
+                    .map(item => {
+                        const messageContent = item.querySelector('.rounded-lg');
+                        return messageContent ? messageContent.textContent : '';
+                    })
+                    .filter(text => text && text !== '正在思考...' && text !== '最终报告生成中...');
+                
+                // 如果没有对话内容，显示默认文本
+                if (allMessages.length === 0) {
+                    const textElement = document.createElement('div');
+                    textElement.className = 'text-white text-xl m-2';
+                    textElement.textContent = '报告已生成';
+                    blackScreen.appendChild(textElement);
+                    return;
+                }
+                
+                // 生成更分散的文本布局，让文本覆盖整个屏幕
+                const faceRadius = Math.min(window.innerWidth, window.innerHeight) * 0.6; // 大幅增加半径，让文本分布更广
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                const totalTexts = Math.min(200, allMessages.length * 5); // 增加文本总数上限
+                
+                // 创建初始文本片段
+                const initialTexts = Math.min(100, allMessages.length * 3); // 增加初始生成的文本数量
+                
+                // 函数：创建随机文本片段
+                function createRandomTextFragment() {
+                    const randomMessage = allMessages[Math.floor(Math.random() * allMessages.length)];
+                    const fragmentLength = Math.min(30, Math.floor(Math.random() * 20) + 10); // 片段长度10-30字符
+                    const maxStartIndex = Math.max(0, randomMessage.length - fragmentLength);
+                    const startIndex = Math.floor(Math.random() * (maxStartIndex + 1));
+                    return randomMessage.substring(startIndex, startIndex + fragmentLength);
+                }
+                
+                // 函数：将文本片段放置在人脸形状的位置
+                function placeTextFragment(fragment, delay = 0) {
+                    // 使用随机极坐标计算位置，形成人脸形状
+                    // 调整分布逻辑，让文本更均匀地分布在整个屏幕
+                    let angle, distanceFactor;
+                    const randomPoint = Math.random();
+                    
+                    // 减少对中心区域的偏好，增加四周的文本分布
+                    angle = Math.random() * Math.PI * 2;
+                    distanceFactor = 0.2 + Math.random() * 0.8; // 0.2-1.0的随机距离因子，覆盖更多屏幕区域
+                    
+                    const x = centerX + Math.cos(angle) * faceRadius * distanceFactor;
+                    const y = centerY + Math.sin(angle) * faceRadius * distanceFactor;
+                    
+                    // 创建文本元素
+                    const textElement = document.createElement('div');
+                    textElement.className = 'text-white absolute';
+                    textElement.style.left = `${x}px`;
+                    textElement.style.top = `${y}px`;
+                    textElement.style.transform = 'translate(-50%, -50%)';
+                    // 调整字体大小，让文本分布更合理
+                    textElement.style.fontSize = `${Math.max(8, Math.floor(Math.random() * 16) + 6)}px`;
+                    textElement.style.rotate = `${Math.random() * 360}deg`;
+                    // 设置中等透明度，让文本更清晰可见
+                    textElement.style.color = `rgba(255, 255, 255, ${0.5 + Math.random() * 0.2})`;
+                    textElement.style.zIndex = Math.floor(Math.random() * 100); // 随机堆叠层级，允许叠加
+                    textElement.textContent = fragment;
+                    
+                    // 添加淡入动画效果
+                    textElement.style.transition = 'opacity 0.5s ease';
+                    textElement.style.opacity = '0';
+                    blackScreen.appendChild(textElement);
+                    
+                    // 延迟显示，创造更自然的逐个出现效果
+                    setTimeout(() => {
+                        textElement.style.opacity = `${0.5 + Math.random() * 0.2}`;
+                    }, delay);
+                }
+                
+                // 大量增加初始生成的文本片段数量，让文本覆盖整个页面
+                for (let i = 0; i < initialTexts * 8; i++) {
+                    const fragment = createRandomTextFragment();
+                    const showDelay = Math.random() * 2000; // 0-2秒的随机延迟
+                    placeTextFragment(fragment, showDelay);
+                }
+                
+                // 设置碎片文本由慢变快出现的效果
+                let active = true;
+                let currentInterval = 200; // 初始间隔200毫秒（较慢）
+                const minInterval = 5;     // 最小间隔5毫秒（最快）
+                const acceleration = 5;    // 每次减少的毫秒数
+                
+                function generateText() {
+                    if (!active) return;
+                    
+                    const fragment = createRandomTextFragment();
+                    placeTextFragment(fragment);
+                    
+                    // 逐渐加快生成速度
+                    if (currentInterval > minInterval) {
+                        currentInterval = Math.max(minInterval, currentInterval - acceleration);
+                    }
+                    
+                    // 设置下一次生成的定时器
+                    setTimeout(generateText, currentInterval);
+                }
+                
+                // 启动生成过程
+                generateText();
+                
+                // 20秒后停止生成新片段并启动粒子效果
+                setTimeout(() => {
+                    active = false;
+                    
+                    // 启动粒子效果
+                    createParticleEffect();
+                }, 20000);
+                
+                // 文本淡出和图片淡入效果函数
+                function createParticleEffect() {
+                    // 收集所有文本元素
+                    const textElements = Array.from(blackScreen.querySelectorAll('.text-white'));
+                    const closeHint = blackScreen.querySelector('.bottom-10');
+                    
+                    // 如果有关闭提示文本，先隐藏
+                    if (closeHint) {
+                        closeHint.style.display = 'none';
+                    }
+                    
+                    // 创建图片显示元素
+                    const imageDisplay = document.createElement('img');
+                    imageDisplay.src = 'ascii_art.png';
+                    imageDisplay.style.position = 'absolute';
+                    imageDisplay.style.left = '50%';
+                    imageDisplay.style.top = '50%';
+                    imageDisplay.style.transform = 'translate(-50%, -50%)';
+                    imageDisplay.style.maxWidth = '80%';
+                    imageDisplay.style.maxHeight = '80%';
+                    imageDisplay.style.opacity = '0';
+                    imageDisplay.style.zIndex = '200';
+                    // 添加黑白反转滤镜
+                    imageDisplay.style.filter = 'invert(100%)';
+                    // 初始亮度设为最低
+                    imageDisplay.style.brightness = '0';
+                    imageDisplay.style.transition = 'opacity 3s ease-in, brightness 3s ease-in';
+                    
+                    // 创建四周扩散变白的遮罩层
+                    const fadeMask = document.createElement('div');
+                    fadeMask.style.position = 'absolute';
+                    fadeMask.style.top = '0';
+                    fadeMask.style.left = '0';
+                    fadeMask.style.width = '100%';
+                    fadeMask.style.height = '100%';
+                    fadeMask.style.zIndex = '199'; // 在图片下方
+                    fadeMask.style.backgroundColor = 'white';
+                    fadeMask.style.opacity = '0';
+                    fadeMask.style.borderRadius = '0';
+                    fadeMask.style.transition = 'none'; // 禁用CSS过渡，使用JS动画
+                    
+                    // 添加到屏幕
+                    blackScreen.appendChild(fadeMask);
+                    
+                    // 添加加载失败的处理
+                    imageDisplay.onerror = function() {
+                            console.error('Failed to load ascii_art.png');
+                        // 如果图片加载失败，显示提示文本
+                        const fallbackText = document.createElement('div');
+                        fallbackText.textContent = '处理完成';
+                        fallbackText.style.position = 'absolute';
+                        fallbackText.style.left = '50%';
+                        fallbackText.style.top = '50%';
+                        fallbackText.style.transform = 'translate(-50%, -50%)';
+                        fallbackText.style.color = 'white';
+                        fallbackText.style.fontSize = '24px';
+                        fallbackText.style.opacity = '0';
+                        fallbackText.style.zIndex = '200';
+                        fallbackText.style.transition = 'opacity 2s ease-in';
+                        blackScreen.appendChild(fallbackText);
+                        
+                        // 使用提示文本继续动画
+                        animateWithElement(fallbackText);
+                    };
+                    
+                    // 添加到屏幕
+                    blackScreen.appendChild(imageDisplay);
+                    
+                    // 动画函数
+                        function animateWithElement(displayElement) {
+                            // 动画持续时间
+                            const duration = 3000; // 3秒
+                            const startTime = performance.now();
+                            
+                            function animate() {
+                                const elapsed = performance.now() - startTime;
+                                const progress = Math.min(elapsed / duration, 1);
+                                
+                                // 图片提前1秒淡入并增加亮度
+                                const imageOpacity = Math.max(0, Math.min(1, progress * 1.5));
+                                displayElement.style.opacity = `${imageOpacity}`;
+                                
+                                // 亮度从0增加到1
+                                if (displayElement.style.filter === 'invert(100%)') {
+                                    const brightness = Math.max(0, Math.min(1, progress * 1.5));
+                                    displayElement.style.brightness = `${brightness}`;
+                                }
+                                
+                                // 文本在图片淡入1秒后开始淡出
+                                const textOpacity = Math.max(0, 1 - Math.max(0, (progress - 0.33) * 1.5));
+                                textElements.forEach(element => {
+                                    if (element !== closeHint) {
+                                        element.style.opacity = `${textOpacity}`;
+                                    }
+                                });
+                                
+                                // 背景跟随图片淡入速率变为白色
+                                fadeMask.style.opacity = `${imageOpacity}`;
+                                fadeMask.style.background = 'white';
+                                
+                                // 当图片完全显示后，将黑底变为白色
+                                if (imageOpacity >= 1) {
+                                    blackScreen.style.backgroundColor = 'white';
+                                }
+                                
+                                if (progress < 1) {
+                                    requestAnimationFrame(animate);
+                                } else {
+                                    // 动画完成后移除文本元素
+                                    textElements.forEach(element => {
+                                        if (element !== closeHint && element.parentNode === blackScreen) {
+                                            blackScreen.removeChild(element);
+                                        }
+                                    });
+                                }
+                            }
+                            
+                            // 开始动画
+                            requestAnimationFrame(animate);
+                        
+                        // 动画完成后设置关闭逻辑
+                        setTimeout(() => {
+                            // 恢复关闭提示
+                            if (closeHint) {
+                                closeHint.style.display = 'block';
+                            }
+                            
+                            // 设置点击关闭
+                            blackScreen.onclick = function() {
+                                active = false;
+                                document.body.removeChild(blackScreen);
+                            };
+                        }, 5000); // 动画完成后设置关闭逻辑
+                    }
+                    
+                    // 如果图片已经加载完成（比如缓存），直接开始动画
+                    if (imageDisplay.complete) {
+                        animateWithElement(imageDisplay);
+                    } else {
+                        // 否则等待图片加载完成
+                        imageDisplay.onload = function() {
+                            animateWithElement(imageDisplay);
+                        };
+                    }
+                }
+                
+                // 简化的函数，因为我们不再需要加载图片和生成目标点
+                function loadImageAndGeneratePoints(imageUrl) {
+                    return new Promise((resolve) => {
+                        resolve([]); // 返回空数组，因为不再需要目标点
+                    });
+                }
+                
+
+            });
         }
 
         // 切换思考状态头像
@@ -246,9 +733,12 @@
             const API_KEY = "sk-807f33ba0ae34437bf69c195d5068570";
             const API_URL = "https://api.deepseek.com/chat/completions";
             
+            // 创建包含上下文的完整消息数组
+            const fullMessages = [...conversationHistory, { role: "user", content: query }];
+            
             const requestData = {
                 model: "deepseek-chat",
-                messages: [{ role: "user", content: query }],
+                messages: fullMessages,
                 temperature: 0.7,
                 max_tokens: 1024
             };
@@ -597,6 +1087,44 @@
                     obstacle.y = canvas.height - groundHeight - obstacle.height;
                 });
             });
+            
+            // 更新初始消息，真实发送给deepseek但不显示在对话记录中
+            const initialMessage = "我在做一个人物研究，接下来会对她进行观察，请你帮助我";
+            
+            // 提问计数器加1
+            questionCounter++;
+            
+            // 选择头像组
+            currentAvatarSet = avatarSets.set1;
+            
+            // 在输入问题前添加限定
+            wholeText = currentAvatarSet.text + initialMessage;
+            
+            // 只添加预设的AI回复到对话记录
+            addToDialog('ai', "好的，开始你的描述。");
+            
+            // 真实调用deepseek API并将消息存入上下文，但不显示在对话记录中
+            async function initConversation() {
+                try {
+                    // 先保存初始用户消息到历史
+                    conversationHistory.push({ role: "user", content: wholeText });
+                    
+                    // 调用API获取真实回复
+                    const realResponse = await callAssistantAPI(initialMessage);
+                    
+                    // 将真实回复存入历史，但不显示在界面上
+                    conversationHistory.push({ role: "assistant", content: realResponse });
+                    
+                    console.log('初始对话已保存到上下文，但未显示在界面');
+                } catch (error) {
+                    console.error('初始API调用失败，使用默认回复:', error);
+                    // 如果调用失败，使用预设回复作为备选
+                    conversationHistory.push({ role: "assistant", content: "好的，开始你的描述。" });
+                }
+            }
+            
+            // 启动初始对话API调用
+            initConversation();
         }
 
         // 启动应用
