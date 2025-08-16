@@ -550,7 +550,7 @@
                 blackScreen.appendChild(bgTransitionMask);
                 
                 // 背景逐渐变白的动画
-                const bgTransitionDuration = 20000; // 20秒，与文字生成过程相同
+                const bgTransitionDuration = 60000; // 20秒，与文字生成过程相同
                 const bgTransitionStartTime = performance.now();
                 
                 function updateBackgroundTransition() {
@@ -599,7 +599,7 @@
                     setTimeout(() => {
                         createParticleEffect();
                     }, 500);
-                }, 20000);
+                }, 60000);
                 
                 // 文本淡出和图片淡入效果函数
                 function createParticleEffect() {
