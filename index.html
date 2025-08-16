@@ -536,6 +536,39 @@
                 const minInterval = 5;     // 最小间隔5毫秒（最快）
                 const acceleration = 5;    // 每次减少的毫秒数
                 
+                // 创建背景过渡的遮罩层
+                const bgTransitionMask = document.createElement('div');
+                bgTransitionMask.style.position = 'absolute';
+                bgTransitionMask.style.top = '0';
+                bgTransitionMask.style.left = '0';
+                bgTransitionMask.style.width = '100%';
+                bgTransitionMask.style.height = '100%';
+                bgTransitionMask.style.zIndex = '198'; // 在文本下方，图片上方
+                bgTransitionMask.style.backgroundColor = 'white';
+                bgTransitionMask.style.opacity = '0';
+                bgTransitionMask.style.pointerEvents = 'none';
+                blackScreen.appendChild(bgTransitionMask);
+                
+                // 背景逐渐变白的动画
+                const bgTransitionDuration = 20000; // 20秒，与文字生成过程相同
+                const bgTransitionStartTime = performance.now();
+                
+                function updateBackgroundTransition() {
+                    const elapsed = performance.now() - bgTransitionStartTime;
+                    const progress = Math.min(elapsed / bgTransitionDuration, 1);
+                    
+                    // 计算背景过渡的不透明度
+                    const bgOpacity = progress;
+                    bgTransitionMask.style.opacity = `${bgOpacity}`;
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(updateBackgroundTransition);
+                    }
+                }
+                
+                // 启动背景过渡动画
+                updateBackgroundTransition();
+                
                 function generateText() {
                     if (!active) return;
                     
@@ -558,8 +591,14 @@
                 setTimeout(() => {
                     active = false;
                     
-                    // 启动粒子效果
-                    createParticleEffect();
+                    // 将背景完全变为白色
+                    blackScreen.style.backgroundColor = 'white';
+                    bgTransitionMask.style.opacity = '1';
+                    
+                    // 延迟启动粒子效果，确保背景完全变白后再开始
+                    setTimeout(() => {
+                        createParticleEffect();
+                    }, 500);
                 }, 20000);
                 
                 // 文本淡出和图片淡入效果函数
@@ -640,32 +679,24 @@
                                 const elapsed = performance.now() - startTime;
                                 const progress = Math.min(elapsed / duration, 1);
                                 
-                                // 图片提前1秒淡入并增加亮度
-                                const imageOpacity = Math.max(0, Math.min(1, progress * 1.5));
+                                // 图片淡入并增加亮度
+                                const imageOpacity = progress;
                                 displayElement.style.opacity = `${imageOpacity}`;
                                 
                                 // 亮度从0增加到1
-                                if (displayElement.style.filter === 'invert(100%)') {
-                                    const brightness = Math.max(0, Math.min(1, progress * 1.5));
-                                    displayElement.style.brightness = `${brightness}`;
-                                }
+                                const brightness = progress;
+                                displayElement.style.brightness = `${brightness}`;
                                 
-                                // 文本在图片淡入1秒后开始淡出
-                                const textOpacity = Math.max(0, 1 - Math.max(0, (progress - 0.33) * 1.5));
+                                // 文本淡出
+                                const textOpacity = 1 - progress;
                                 textElements.forEach(element => {
                                     if (element !== closeHint) {
                                         element.style.opacity = `${textOpacity}`;
                                     }
                                 });
                                 
-                                // 背景跟随图片淡入速率变为白色
-                                fadeMask.style.opacity = `${imageOpacity}`;
-                                fadeMask.style.background = 'white';
-                                
-                                // 当图片完全显示后，将黑底变为白色
-                                if (imageOpacity >= 1) {
-                                    blackScreen.style.backgroundColor = 'white';
-                                }
+                                // 隐藏淡入遮罩
+                                fadeMask.style.opacity = '0';
                                 
                                 if (progress < 1) {
                                     requestAnimationFrame(animate);
