@@ -35,7 +35,7 @@
             
             /* 左侧面板布局 */
             .left-panel {
-                width: 320px;
+                width: 250px; /* 进一步减小左侧面板宽度 */
                 display: flex;
                 flex-direction: column;
                 gap: 1rem;
@@ -43,8 +43,8 @@
             
             /* 一寸照比例头像容器 (3:4) */
             .id-photo-container {
-                flex: 3;
-                min-height: 240px;
+                flex: 1.5; /* 进一步减小头像容器比例 */
+                min-height: 180px;
                 background-color: #f0f2f5;
                 overflow: hidden;
                 border-radius: 0.75rem;
@@ -60,8 +60,8 @@
             
             /* 输入框区域样式 */
             .input-panel {
-                flex: 2;
-                min-height: 180px;
+                flex: 1; /* 进一步减小输入框区域比例 */
+                min-height: 120px;
             }
 
             /* 恐龙游戏样式 */
@@ -518,8 +518,8 @@
                     textElement.style.left = `${x}px`;
                     textElement.style.top = `${y}px`;
                     textElement.style.transform = 'translate(-50%, -50%)';
-                    // 调整字体大小，让文本分布更合理
-                    textElement.style.fontSize = `${Math.max(8, Math.floor(Math.random() * 16) + 6)}px`;
+                    // 调整字体大小，保持最小8px不变，增加最大字体大小
+                    textElement.style.fontSize = `${Math.max(8, Math.floor(Math.random() * 24) + 6)}px`;
                     textElement.style.rotate = `${Math.random() * 360}deg`;
                     // 设置中等透明度，让文本更清晰可见
                     textElement.style.color = `rgba(255, 255, 255, ${0.5 + Math.random() * 0.2})`;
@@ -537,16 +537,9 @@
                     }, delay);
                 }
                 
-                // 大量增加初始生成的文本片段数量，让文本覆盖整个页面
-                for (let i = 0; i < initialTexts * 8; i++) {
-                    const fragment = createRandomTextFragment();
-                    const showDelay = Math.random() * 2000; // 0-2秒的随机延迟
-                    placeTextFragment(fragment, showDelay);
-                }
-                
                 // 设置碎片文本由慢变快出现的效果
                 let active = true;
-                let currentInterval = 2000; // 初始间隔2000毫秒（较慢）
+                let currentInterval = 2000; // 初始间隔2000毫秒
                 const minInterval = 5;     // 最小间隔5毫秒（最快）
                 const acceleration = 5;    // 每次减少的毫秒数
                 
@@ -850,7 +843,7 @@
                      class="message-avatar mt-1"
                      onerror="this.src='${role === 'user' ? userAvatar : 'https://picsum.photos/seed/robot/36/36'}'">
                 <div class="flex-1 max-w-[85%]">
-                    <div class="p-3 rounded-lg ${roleClass} break-words">${content}</div>
+                    <div class="p-3 rounded-lg ${roleClass} break-words text-lg">${content}</div>
                 </div>
             `;
             
