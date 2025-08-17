@@ -222,6 +222,11 @@
                 text: '请以对科技有一定信心的技术人士的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
                 normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK.png',
                 thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageMUSK_Thinking.png'
+            },
+            set10: {
+                text: '请以艺术家的语言方式回答下面问题，但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
+                normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageCHENLAOJU.png',
+                thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageCHENLAOJU.png'
             }
         };
 
@@ -294,8 +299,10 @@
                 currentAvatarSet = avatarSets.set7;
             } else if (questionCounter === 13) {
                 currentAvatarSet = avatarSets.set8;
-            } else {
+            } else if (questionCounter === 14) {
                 currentAvatarSet = avatarSets.set9;
+            } else {
+                currentAvatarSet = avatarSets.set10;
             }
 
 
