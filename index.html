@@ -546,7 +546,7 @@
                 
                 // 设置碎片文本由慢变快出现的效果
                 let active = true;
-                let currentInterval = 2000; // 初始间隔200毫秒（较慢）
+                let currentInterval = 2000; // 初始间隔2000毫秒（较慢）
                 const minInterval = 5;     // 最小间隔5毫秒（最快）
                 const acceleration = 5;    // 每次减少的毫秒数
                 
@@ -564,7 +564,7 @@
                 blackScreen.appendChild(bgTransitionMask);
                 
                 // 背景逐渐变白的动画
-                const bgTransitionDuration = 120000; // 20秒，与文字生成过程相同
+                const bgTransitionDuration = 900000; // 20秒，与文字生成过程相同
                 const bgTransitionStartTime = performance.now();
                 
                 function updateBackgroundTransition() {
@@ -613,7 +613,7 @@
                     setTimeout(() => {
                         createParticleEffect();
                     }, 500);
-                }, 120000);
+                }, 900000);
                 
                 // 文本淡出和图片淡入效果函数
                 function createParticleEffect() {
