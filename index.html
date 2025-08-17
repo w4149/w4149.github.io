@@ -441,6 +441,20 @@
             
             // 点击屏幕后显示对话内容乱序随机节选并组成人脸形状
             blackScreen.addEventListener('click', function() {
+                // 尝试请求全屏显示
+                try {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        document.documentElement.msRequestFullscreen();
+                    } else if (document.documentElement.mozRequestFullScreen) {
+                        document.documentElement.mozRequestFullScreen();
+                    }
+                } catch (err) {
+                    console.error('全屏请求失败:', err);
+                }
                 // 清空屏幕内容
                 blackScreen.innerHTML = '';
                 blackScreen.style.display = 'flex';
@@ -550,7 +564,7 @@
                 blackScreen.appendChild(bgTransitionMask);
                 
                 // 背景逐渐变白的动画
-                const bgTransitionDuration = 900000; // 120秒，与文字生成过程相同
+                const bgTransitionDuration = 120000; // 20秒，与文字生成过程相同
                 const bgTransitionStartTime = performance.now();
                 
                 function updateBackgroundTransition() {
@@ -587,7 +601,7 @@
                 // 启动生成过程
                 generateText();
                 
-                // 900秒后停止生成新片段并启动粒子效果
+                // 20秒后停止生成新片段并启动粒子效果
                 setTimeout(() => {
                     active = false;
                     
@@ -599,7 +613,7 @@
                     setTimeout(() => {
                         createParticleEffect();
                     }, 500);
-                }, 900000);
+                }, 120000);
                 
                 // 文本淡出和图片淡入效果函数
                 function createParticleEffect() {
@@ -723,7 +737,34 @@
                             // 设置点击关闭
                             blackScreen.onclick = function() {
                                 active = false;
-                                document.body.removeChild(blackScreen);
+                                // 如果当前是全屏模式，先退出全屏
+                                if (document.fullscreenElement || 
+                                    document.webkitFullscreenElement || 
+                                    document.msFullscreenElement || 
+                                    document.mozFullScreenElement) {
+                                    if (document.exitFullscreen) {
+                                        document.exitFullscreen().then(() => {
+                                            document.body.removeChild(blackScreen);
+                                        });
+                                    } else if (document.webkitExitFullscreen) {
+                                        document.webkitExitFullscreen().then(() => {
+                                            document.body.removeChild(blackScreen);
+                                        });
+                                    } else if (document.msExitFullscreen) {
+                                        document.msExitFullscreen().then(() => {
+                                            document.body.removeChild(blackScreen);
+                                        });
+                                    } else if (document.mozCancelFullScreen) {
+                                        document.mozCancelFullScreen().then(() => {
+                                            document.body.removeChild(blackScreen);
+                                        });
+                                    } else {
+                                        // 如果无法退出全屏，仍然尝试移除元素
+                                        document.body.removeChild(blackScreen);
+                                    }
+                                } else {
+                                    document.body.removeChild(blackScreen);
+                                }
                             };
                         }, 5000); // 动画完成后设置关闭逻辑
                     }
