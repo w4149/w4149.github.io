@@ -330,6 +330,7 @@
                     // 不执行任何移除loading元素或设置thinking state为false的操作
                     return;
                 }
+                /*
                 // 检查消息是否同时包含"单身"、"小狗"、"仪式"
                 else if (text.includes("单身") && text.includes("小狗") && text.includes("仪式")) {
                     // 保持"正在思考"状态5秒后再显示回复
@@ -341,8 +342,21 @@
                     // 不调用API，直接返回，让延迟函数执行
                     return;
                 }
+                */
                 // 检查消息是否包含"丝巾"
                 else if (text.includes("丝巾")) {
+                    // 保持"正在思考"状态5秒后再显示回复
+                    setTimeout(() => {
+                        removeLoadingItem(loadingId);
+                        addToDialog('ai', '心理机制已建立，你可以选择提供更多信息，或者直接生成报告？');
+                        setThinkingState(false);
+                    }, 3000);
+                    // 不调用API，直接返回，让延迟函数执行
+                    return;
+                }
+
+                // 检查消息是否包含"丝巾"
+                else if (text.includes("直接")) {
 
                     // 假装处理，不调用API
                     await simulateReportGeneration(loadingId);
