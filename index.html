@@ -375,8 +375,8 @@
                     */
                     else if (text.includes("宠物")) {
                         apiText = wholeText + "（正常输出回复，但是要自然合理地提到：宠物的陪伴提供安全感，人与小动物更容易建立亲密。）";
-                    } else if (text.includes("创作母题")) {
-                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：创作所使用材料可能是什么？）";
+                    } else if (text.includes("创作母题") || text.includes("创作主题")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地询问：创作所使用材料可能是什么？）";
                     } 
                     /* else if (text.includes("出门")) {
                         apiText = wholeText + "（正常输出回复，但是要自然合理地提到：文艺演出。）";
