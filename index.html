@@ -60,8 +60,8 @@
             
             /* 输入框区域样式 */
             .input-panel {
-                flex: 1; /* 进一步减小输入框区域比例 */
-                min-height: 120px;
+                flex: 0.5; /* 减小输入框区域比例 */
+                min-height: 60px; /* 高度减小一半 */
             }
 
             /* 恐龙游戏样式 */
@@ -141,19 +141,19 @@
                 </div>
 
                 <!-- 左侧下部：输入框区域 -->
-                <div class="input-panel bg-white rounded-xl shadow-md p-5 flex flex-col">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">输入消息</h3>
+                <div class="input-panel bg-white rounded-xl shadow-md p-4 flex flex-col">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-2">输入消息</h3>
                     <textarea id="input-area" 
-                              class="flex-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none" 
+                              class="flex-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none text-sm" 
                               placeholder="请输入您的问题..."></textarea>
                 </div>
             </div>
 
             <!-- 右侧区域：对话记录 -->
-            <div class="flex-1 bg-white rounded-xl shadow-md p-5 flex flex-col">
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">对话记录</h3>
-                <div id="dialog-container" class="scrollable-area flex-1 overflow-y-auto p-2 space-y-4">
-                    <div class="text-gray-400 text-center py-8">
+            <div class="flex-1 bg-white rounded-xl shadow-md p-4 flex flex-col">
+                <h3 class="text-sm font-semibold text-gray-800 mb-2">对话记录</h3>
+                <div id="dialog-container" class="scrollable-area flex-1 overflow-y-auto p-2 space-y-3">
+                    <div class="text-gray-400 text-center py-4 text-sm">
                         开始您的对话吧
                     </div>
                 </div>
@@ -162,9 +162,6 @@
 
         <!-- 底部恐龙游戏区域 -->
         <div class="dino-game-container mt-6">
-            <div class="game-info">
-                <span id="score">0</span>
-            </div>
             <canvas id="gameCanvas"></canvas>
         </div>
     </div>
@@ -400,8 +397,8 @@
             const generatingId = `generating-${Date.now()}`;
             addToDialog('ai', '最终报告生成中...', false, generatingId);
             
-            // 20秒后创建全黑页面
-            await new Promise(resolve => setTimeout(resolve, 19000));
+            // 10秒后创建全黑页面
+            await new Promise(resolve => setTimeout(resolve, 9000));
             
             // 移除生成中提示
             removeLoadingItem(generatingId);
@@ -439,7 +436,7 @@
                 if (index < message.length) {
                     textElement.textContent += message.charAt(index);
                     index++;
-                    setTimeout(type, 200); // 每个字符显示的间隔时间
+                    setTimeout(type, 100); // 每个字符显示的间隔时间
                 }
             }
             
@@ -496,8 +493,20 @@
                 // 创建初始文本片段
                 const initialTexts = Math.min(100, allMessages.length * 3); // 增加初始生成的文本数量
                 
+                // 自定义初始文本
+                const customInitialTexts = ["丝巾", "仪式感", "心理学的书", "创作笔记", "可爱的小狗", "化好妆出门"];
+                let textCounter = 0;
+
                 // 函数：创建随机文本片段
                 function createRandomTextFragment() {
+                    // 前6个文本使用用户指定的内容
+                    if (textCounter < customInitialTexts.length) {
+                        const text = customInitialTexts[textCounter];
+                        textCounter++;
+                        return text;
+                    }
+
+                    // 之后的文本从对话历史中随机抽取
                     const randomMessage = allMessages[Math.floor(Math.random() * allMessages.length)];
                     const fragmentLength = Math.min(30, Math.floor(Math.random() * 20) + 10); // 片段长度10-30字符
                     const maxStartIndex = Math.max(0, randomMessage.length - fragmentLength);
@@ -564,7 +573,7 @@
                 blackScreen.appendChild(bgTransitionMask);
                 
                 // 背景逐渐变白的动画
-                const bgTransitionDuration = 900000; // 20秒，与文字生成过程相同
+                const bgTransitionDuration = 700000; // 20秒，与文字生成过程相同
                 const bgTransitionStartTime = performance.now();
                 
                 function updateBackgroundTransition() {
@@ -613,7 +622,7 @@
                     setTimeout(() => {
                         createParticleEffect();
                     }, 500);
-                }, 900000);
+                }, 700000);
                 
                 // 文本淡出和图片淡入效果函数
                 function createParticleEffect() {
@@ -898,7 +907,7 @@
         
         // 障碍物图片加载
         const obstacleImage = new Image();
-        obstacleImage.src = "https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/theother_XUBINGstyle.png";
+        obstacleImage.src = "https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/JumpTheOther.png";
         let imageLoaded = false;
         
         // 图片加载完成事件
@@ -926,7 +935,6 @@
         };
         
         let obstacles = [];
-        let score = 0;
         let gameSpeed = 5;
         let gameState = GameState.NOT_STARTED; // 初始状态为未开始
         let animationId;
@@ -982,10 +990,8 @@
             if (obstacleTimer) clearInterval(obstacleTimer);
             
             // 重置游戏状态
-            score = 0;
             gameSpeed = 5;
             gameState = GameState.NOT_STARTED;
-            document.getElementById('score').textContent = '0';
         }
 
         // 创建障碍物（保持原有尺寸）
@@ -1013,14 +1019,8 @@
         function update() {
             if (gameState !== GameState.RUNNING) return;
             
-            // 更新分数
-            score++;
-            document.getElementById('score').textContent = score.toString();
-            
-            // 加速游戏
-            if (score % 100 === 0) {
-                gameSpeed += 0.2;
-            }
+            // 固定速度运行，不再根据分数加速
+            gameSpeed = 5;
             
             // 更新恐龙位置（重力和跳跃）
             dino.velocityY += dino.gravity;
