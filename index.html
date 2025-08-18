@@ -351,21 +351,34 @@
                     let apiText = wholeText;
                     if (text.includes("单人床")) {
                         apiText = wholeText + "（正常输出回复，但是要自然合理地提到“极简主义”这个词。）";
-                    } else if (text.includes("长发") && text.includes("赤脚")) {
+                    } 
+                    /*
+                    else if (text.includes("长发") && text.includes("赤脚")) {
                         apiText = wholeText + "（正常输出回复，但是要自然合理地提到“创意从业者”和“艺术家”这两个词。）";
-                    } else if (text.includes("艺术家")) {
+                    } 
+                    */
+                    else if (text.includes("艺术家")) {
                         apiText = wholeText + "（正常输出回复，但是要自然合理地提到：疲惫感还可能因为她是一个上班族，在业余时间做一些艺术创作。）";
-                    } else if (text.includes("上班族") || text.includes("一本书") || text.includes("工作消息")) {
+                    } 
+                    else if (text.includes("上班族") || text.includes("一本书") || text.includes("工作消息")) {
                         apiText = wholeText + "（正常输出回复，但是要自然合理地提到：需要提供更多的信息。）";
-                    } else if (text.includes("田野方法")) {
+                    } else if (text.includes("更多的信息") || text.includes("一本书") || text.includes("工作消息")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：不好意思，以现在的程度还无法生成报告。）";
+                    } 
+                    /* else if (text.includes("田野方法")) {
                         apiText = wholeText + "（正常输出回复，但是要首先提到：技术带来的帮助。）";
-                    } else if (text.includes("宠物")) {
+                    } */
+                    else if (text.includes("还能")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：你可以从她的心理机制建立形象，比如她的情感状态，是否养宠物。）";
+                    } 
+                    else if (text.includes("宠物")) {
                         apiText = wholeText + "（正常输出回复，但是要自然合理地提到：宠物的陪伴提供安全感，人与小动物更容易建立亲密。）";
                     } else if (text.includes("创作母题")) {
-                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：心理机制。）";
-                    } else if (text.includes("出门")) {
-                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：文艺演出。）";
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：创作所使用材料可能是什么？）";
                     } 
+                    /* else if (text.includes("出门")) {
+                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到：文艺演出。）";
+                    } */
 
                     
                     // 正常调用API获取回复
