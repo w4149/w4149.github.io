@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智能对话系统</title>
+    <title>Research Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style type="text/tailwindcss">
         @layer utilities {
@@ -142,7 +142,6 @@
 
                 <!-- 左侧下部：输入框区域 -->
                 <div class="input-panel bg-white rounded-xl shadow-md p-4 flex flex-col">
-                    <h3 class="text-sm font-semibold text-gray-800 mb-2">输入消息</h3>
                     <textarea id="input-area" 
                               class="flex-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none text-sm" 
                               placeholder="请输入您的问题..."></textarea>
@@ -151,7 +150,7 @@
 
             <!-- 右侧区域：对话记录 -->
             <div class="flex-1 bg-white rounded-xl shadow-md p-4 flex flex-col">
-                <h3 class="text-sm font-semibold text-gray-800 mb-2">对话记录</h3>
+                <h3 class="text-sm font-semibold text-gray-800 mb-2">人物研究报告</h3>
                 <div id="dialog-container" class="scrollable-area flex-1 overflow-y-auto p-2 space-y-3">
                     <div class="text-gray-400 text-center py-4 text-sm">
                         开始您的对话吧
@@ -201,7 +200,6 @@
             },
             set6: {
                 text: '请以黑人男性的语言方式回答下面问题（请用中文回答），但不要让人很容易就判断出你的身份，直接说一段文字，不要任何其他东西（比如表情符号、对自己身份的介绍、动作神情的描述）：',
-
                 normal: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageBLACKMAN.png',
                 thinking: 'https://oiwjj-1325666589.cos.ap-beijing.myqcloud.com/ImageBLACKMAN.png'
             },
@@ -273,33 +271,33 @@
             if (questionCounter === 1) {
                 currentAvatarSet = avatarSets.set1;
             } else if (questionCounter === 2) {
-                currentAvatarSet = avatarSets.set1;
+                currentAvatarSet = avatarSets.set2;
             } else if (questionCounter === 3) {
-                currentAvatarSet = avatarSets.set1;
+                currentAvatarSet = avatarSets.set3;
             } else if (questionCounter === 4) {
-                currentAvatarSet = avatarSets.set1;
-            } else if (questionCounter === 5) {
-                currentAvatarSet = avatarSets.set2;
-            } else if (questionCounter === 6) {
-                currentAvatarSet = avatarSets.set2;
-            } else if (questionCounter === 7) {
-                currentAvatarSet = avatarSets.set3;
-            } else if (questionCounter === 8) {
-                currentAvatarSet = avatarSets.set3;
-            } else if (questionCounter === 9) {
                 currentAvatarSet = avatarSets.set4;
-            } else if (questionCounter === 10) {
+            } else if (questionCounter === 5) {
                 currentAvatarSet = avatarSets.set5;
-            } else if (questionCounter === 11) { 
+            } else if (questionCounter === 6) {
                 currentAvatarSet = avatarSets.set6;
-            } else if (questionCounter === 12) {
+            } else if (questionCounter === 7) {
                 currentAvatarSet = avatarSets.set7;
-            } else if (questionCounter === 13) {
+            } else if (questionCounter === 8) {
                 currentAvatarSet = avatarSets.set8;
+            } else if (questionCounter === 9) {
+                currentAvatarSet = avatarSets.set9;
+            } else if (questionCounter === 10) {
+                currentAvatarSet = avatarSets.set9;
+            } else if (questionCounter === 11) { 
+                currentAvatarSet = avatarSets.set9;
+            } else if (questionCounter === 12) {
+                currentAvatarSet = avatarSets.set9;
+            } else if (questionCounter === 13) {
+                currentAvatarSet = avatarSets.set9;
             } else if (questionCounter === 14) {
                 currentAvatarSet = avatarSets.set9;
             } else {
-                currentAvatarSet = avatarSets.set10;
+                currentAvatarSet = avatarSets.set9;
             }
 
 
@@ -355,8 +353,8 @@
                     return;
                 }
 
-                // 检查消息是否包含"直接生成最终报告"
-                else if (text.includes("直接生成最终报告")) {
+                // 检查消息是否包含"最终报告"
+                else if (text.includes("最终报告") || text.includes("最终的报告")) {
 
                     // 假装处理，不调用API
                     await simulateReportGeneration(loadingId);
@@ -364,7 +362,8 @@
                     // 检查消息是否包含"单人床"
                     let apiText = wholeText;
                     if (text.includes("单人床")) {
-                        apiText = wholeText + "（正常输出回复，但是要自然合理地提到“创意从业者”和“艺术家”这两个词。）";
+                        apiText = wholeText + "（自然合理地从单人床提到独居和喜欢安静；从素净整洁的角度提到“极简主义”；从日常用品的细腻质感（但不说具体有哪些日常用品）和宽松舒适的穿着，提到“创意从业者”和“艺术家”这两个词。）";
+
                     } 
                     /*
                     else if (text.includes("长发") && text.includes("赤脚")) {
@@ -397,17 +396,70 @@
                     } */
 
                     
-                    // 正常调用API获取回复
-                    const response = await callAssistantAPI(apiText);
-                    
-                    // 保存对话历史（用户消息和AI回复）
-                    conversationHistory.push({ role: "user", content: wholeText });
-                    conversationHistory.push({ role: "assistant", content: response });
-                    
-                    // 显示回复并恢复正常状态
-                    removeLoadingItem(loadingId);
-                    addToDialog('ai', response);
-                    setThinkingState(false);
+                    try {
+                        // 正常调用API获取回复
+                        const response = await callAssistantAPI(apiText);
+                        
+                        // 保存对话历史（用户消息和AI回复）
+                        conversationHistory.push({ role: "user", content: wholeText });
+                        conversationHistory.push({ role: "assistant", content: response });
+                        
+                        // 显示回复并恢复正常状态
+                        removeLoadingItem(loadingId);
+                        addToDialog('ai', response);
+                        setThinkingState(false);
+                    } catch (error) {
+                        // 所有API异常情况下，都根据questionCounter返回特定回复
+                        let specialResponse = "特定回复";
+                        switch (questionCounter) {
+                            case 1:
+                                specialResponse = "特定回复1";
+                                break;
+                            case 2:
+                                specialResponse = "工作日的清晨，阳光透过窗帘洒进这间不大的房间，一张舒适的单人床占据角落，暗示着她独居的生活状态。长发女性穿着宽松的居家服，动作轻缓，似乎享受着这份宁静。房间布置素净整洁，几乎没有多余物件，透露出极简主义的生活态度。日常用品虽少却质感细腻，每件都经过精心挑选，与她宽松舒适的穿着风格相呼应。这种对细节的敏感与追求，加上空间中隐约的文艺气息，让人联想到她可能从事创意行业，或是一位习惯独处的艺术家。";
+                                break;
+                            case 3:
+                                specialResponse = "她可能更倾向于视觉艺术，比如绘画或摄影，因为房间里虽然简洁，但隐约能感受到对色彩和构图的敏感。不过疲惫感暗示她并非全职艺术家——或许是个上班族，白天处理枯燥的报表或会议，夜晚和周末才挤出时间创作。冥想是她切换状态的仪式，用来洗去职场积累的麻木感，重新连接内心的敏锐度。桌上可能放着速写本或数位板，抽屉里藏着未完成的手稿，两种身份在她身上形成微妙张力：朝九晚五的秩序感与深夜创作的失控感相互拉扯。";
+                                break;
+                            case 4:
+                                specialResponse = "从现有信息推断，桌上书籍与白天工作的关联性存在两种可能。若书籍属于艺术理论或创作技法类，则更可能服务于夜间创作而非日常工作；若是工具书或专业教材，则存在职业相关性的概率较高。值得注意的是，极简主义倾向者通常会严格区分工作与生活物品的存放位置，因此书籍出现在生活区域反而降低了职业关联的可能性。但这一推论存在局限性，需要提供更多信息以确认其职业性质、书籍具体类别及房间功能分区情况。建议进一步观察书籍摆放位置、翻阅痕迹及内容类型以提升判断准确度。";
+                                break;
+                            case 5:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 6:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 7:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 8:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 9:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 10:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 11:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 12:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            case 13:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                                break;
+                            default:
+                                specialResponse = "请再多提供一些信息，我会更好地帮助你。";
+                        }
+                        
+                        // 显示特定回复，但不保存到对话历史，这样后续API返回的信息也不会加入上下文
+                        removeLoadingItem(loadingId);
+                        addToDialog('ai', specialResponse);
+                        setThinkingState(false);
+                    }
                 }
             } catch (error) {
                 // 处理错误
@@ -523,7 +575,7 @@
                 const initialTexts = Math.min(100, allMessages.length * 3); // 增加初始生成的文本数量
                 
                 // 自定义初始文本
-                const customInitialTexts = ["丝巾", "仪式感", "心理学的书", "创作笔记", "可爱的小狗", "化好妆出门"];
+                const customInitialTexts = ["丝巾", "创作材料", "工作相关的书", "安全感", "灰色小狗", "创作主题"];
                 let textCounter = 0;
 
                 // 函数：创建随机文本片段
@@ -853,14 +905,25 @@
                 max_tokens: 1024
             };
             
-            const response = await fetch(API_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${API_KEY}`
-                },
-                body: JSON.stringify(requestData)
+            // 创建超时Promise
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error("API_TIMEOUT"));
+                }, 5000); // 5秒超时
             });
+            
+            // 使用Promise.race实现超时处理
+            const response = await Promise.race([
+                fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify(requestData)
+                }),
+                timeoutPromise
+            ]);
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
@@ -1202,7 +1265,8 @@
             wholeText = currentAvatarSet.text + initialMessage;
             
             // 只添加预设的AI回复到对话记录
-            addToDialog('ai', "好的，开始你的描述。");
+            addToDialog('user', "开始一个新任务");
+            addToDialog('ai', "好的，请开始你的描述，你可以试着从环境入手，我会帮助你建立人物档案。");
             
             // 真实调用deepseek API并将消息存入上下文，但不显示在对话记录中
             async function initConversation() {
