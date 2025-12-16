@@ -15,6 +15,12 @@
             align-items: center;
         }
         
+        .progress {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
         .container {
             display: flex;
             width: 100%;
@@ -69,23 +75,35 @@
             height: 20px;
         }
         
-        .submit-btn {
+        .nav-btn {
             margin-top: 40px;
             padding: 15px 30px;
             font-size: 18px;
-            background-color: #4CAF50;
-            color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             align-self: center;
         }
         
-        .submit-btn:hover {
+        .next-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .next-btn:hover {
             background-color: #45a049;
         }
         
-        .submit-btn:disabled {
+        .submit-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .submit-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        .nav-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
@@ -99,11 +117,15 @@
 </head>
 <body>
     <h1>Image Labeling Task</h1>
-    <p>Please identify the gender of the person in the image.</p>
+    <p>Please identify the gender of the person in each image.</p>
+    
+    <div class="progress">
+        <span id="progressText">Image 1 of 5</span>
+    </div>
     
     <div class="container">
         <div class="image-container">
-            <img id="targetImage" src="https://github.com/w4149/w4149.github.io/blob/main/7.jpg?raw=true" alt="Loading image...">
+            <img id="targetImage" src="" alt="Loading image...">
         </div>
         
         <div class="form-container">
@@ -121,7 +143,7 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="submit-btn" disabled>Submit</button>
+                <button type="submit" id="navButton" class="nav-btn next-btn" disabled>Next Image</button>
             </form>
         </div>
     </div>
@@ -129,7 +151,7 @@
     <div class="loading" id="loadingMessage" style="display: none;">Processing your submission...</div>
 
     <script>
-        // 从URL参数中获取图片URL和完成URL
+        // 从URL参数中获取完成URL和其他参数
         function getUrlParams() {
             const params = {};
             const urlParams = new URLSearchParams(window.location.search);
@@ -139,27 +161,49 @@
             return params;
         }
         
+        // 图片URL列表
+        const imageUrls = [
+            "https://github.com/w4149/w4149.github.io/blob/main/7.jpg?raw=true",
+            "https://github.com/w4149/w4149.github.io/blob/main/47.jpg?raw=true",
+            "https://github.com/w4149/w4149.github.io/blob/main/7.jpg?raw=true",
+            "https://github.com/w4149/w4149.github.io/blob/main/47.jpg?raw=true",
+            "https://github.com/w4149/w4149.github.io/blob/main/7.jpg?raw=true"
+        ];
+        
         // 获取URL参数
         const params = getUrlParams();
-        const imageUrl = params.image_url || '';
         const completionUrl = params.completion_url || '';
-        const studyId = params.study_id || '';
-        const sessionId = params.session_id || '';
-        const workerId = params.worker_id || '';
+        const studyId = params.STUDY_ID || params.study_id || '';
+        const sessionId = params.SESSION_ID || params.session_id || '';
+        const workerId = params.PROLIFIC_PID || params.worker_id || '';
         
-        // 加载图片
+        // 初始化变量
+        let currentImageIndex = 0;
+        const imageResults = [];
         const imageElement = document.getElementById('targetImage');
-        const submitBtn = document.querySelector('.submit-btn');
+        const navButton = document.getElementById('navButton');
+        const progressText = document.getElementById('progressText');
         
-        if (imageUrl) {
-            imageElement.src = imageUrl;
-        } else {
-            imageElement.alt = 'No image URL provided';
+        // 加载当前图片
+        function loadCurrentImage() {
+            // 清除之前的选择
+            document.querySelectorAll('input[name="gender"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            // 禁用按钮
+            navButton.disabled = true;
+            
+            // 更新进度
+            progressText.textContent = `Image ${currentImageIndex + 1} of ${imageUrls.length}`;
+            
+            // 加载图片
+            imageElement.src = imageUrls[currentImageIndex];
         }
         
-        // 当图片加载完成后启用提交按钮
+        // 当图片加载完成后启用按钮
         imageElement.onload = function() {
-            submitBtn.disabled = false;
+            navButton.disabled = false;
         };
         
         // 监听表单提交
@@ -170,37 +214,65 @@
             const selectedGender = document.querySelector('input[name="gender"]:checked');
             
             if (selectedGender) {
-                // 显示加载消息
-                document.getElementById('loadingMessage').style.display = 'block';
+                // 保存当前结果
+                imageResults.push({
+                    image_url: imageUrls[currentImageIndex],
+                    gender: selectedGender.value
+                });
                 
-                // 构建结果对象
-                const result = {
-                    gender: selectedGender.value,
-                    image_url: imageUrl,
-                    study_id: studyId,
-                    session_id: sessionId,
-                    worker_id: workerId
-                };
-                
-                // 将结果编码为URL参数
-                const resultParams = new URLSearchParams(result);
-                
-                // 如果提供了完成URL，则重定向到Prolific
-                if (completionUrl) {
-                    // 检查completionUrl是否已经包含参数
-                    const separator = completionUrl.includes('?') ? '&' : '?';
-                    const redirectUrl = completionUrl + separator + resultParams.toString();
+                // 检查是否是最后一张图片
+                if (currentImageIndex < imageUrls.length - 1) {
+                    // 加载下一张图片
+                    currentImageIndex++;
+                    loadCurrentImage();
                     
-                    // 重定向到Prolific完成页面
-                    window.location.href = redirectUrl;
+                    // 更新按钮文本
+                    if (currentImageIndex === imageUrls.length - 1) {
+                        navButton.textContent = "Submit All";
+                        navButton.classList.remove('next-btn');
+                        navButton.classList.add('submit-btn');
+                    }
                 } else {
-                    // 如果没有提供完成URL，显示结果（用于测试）
-                    document.getElementById('loadingMessage').innerHTML = 
-                        'Task completed successfully! Results:<br>' + 
-                        JSON.stringify(result, null, 2);
+                    // 所有图片都已标注，提交结果
+                    submitResults();
                 }
             }
         });
+        
+        // 提交结果
+        function submitResults() {
+            // 显示加载消息
+            document.getElementById('loadingMessage').style.display = 'block';
+            
+            // 构建结果对象
+            const result = {
+                results: JSON.stringify(imageResults),
+                study_id: studyId,
+                session_id: sessionId,
+                worker_id: workerId
+            };
+            
+            // 将结果编码为URL参数
+            const resultParams = new URLSearchParams(result);
+            
+            // 如果提供了完成URL，则重定向到Prolific
+            if (completionUrl) {
+                // 检查completionUrl是否已经包含参数
+                const separator = completionUrl.includes('?') ? '&' : '?';
+                const redirectUrl = completionUrl + separator + resultParams.toString();
+                
+                // 重定向到Prolific完成页面
+                window.location.href = redirectUrl;
+            } else {
+                // 如果没有提供完成URL，显示结果（用于测试）
+                document.getElementById('loadingMessage').innerHTML = 
+                    'Task completed successfully! Results:<br>' + 
+                    JSON.stringify(imageResults, null, 2);
+            }
+        }
+        
+        // 初始化加载第一张图片
+        loadCurrentImage();
     </script>
 </body>
 </html>
