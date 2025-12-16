@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Labeling Task</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            display: flex;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .image-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .image-container img {
+            max-width: 100%;
+            max-height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .form-container {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .question {
+            font-size: 24px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .option {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .option input[type="radio"] {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .submit-btn {
+            margin-top: 40px;
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            align-self: center;
+        }
+        
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .submit-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            font-size: 18px;
+            color: #666;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Labeling Task</h1>
+    <p>Please identify the gender of the person in the image.</p>
+    
+    <div class="container">
+        <div class="image-container">
+            <img id="targetImage" src="" alt="Loading image...">
+        </div>
+        
+        <div class="form-container">
+            <div class="question">What is the gender of the person?</div>
+            
+            <form id="labelForm">
+                <div class="options">
+                    <div class="option">
+                        <input type="radio" id="male" name="gender" value="male">
+                        <label for="male">Male</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="female" name="gender" value="female">
+                        <label for="female">Female</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn" disabled>Submit</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="loading" id="loadingMessage" style="display: none;">Processing your submission...</div>
+
+    <script>
+        // 从URL参数中获取图片URL和完成URL
+        function getUrlParams() {
+            const params = {};
+            const urlParams = new URLSearchParams(window.location.search);
+            for (const [key, value] of urlParams) {
+                params[key] = value;
+            }
+            return params;
+        }
+        
+        // 获取URL参数
+        const params = getUrlParams();
+        const imageUrl = params.image_url || '';
+        const completionUrl = params.completion_url || '';
+        const studyId = params.study_id || '';
+        const sessionId = params.session_id || '';
+        const workerId = params.worker_id || '';
+        
+        // 加载图片
+        const imageElement = document.getElementById('targetImage');
+        const submitBtn = document.querySelector('.submit-btn');
+        
+        if (imageUrl) {
+            imageElement.src = imageUrl;
+        } else {
+            imageElement.alt = 'No image URL provided';
+        }
+        
+        // 当图片加载完成后启用提交按钮
+        imageElement.onload = function() {
+            submitBtn.disabled = false;
+        };
+        
+        // 监听表单提交
+        document.getElementById('labelForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 获取用户选择
+            const selectedGender = document.querySelector('input[name="gender"]:checked');
+            
+            if (selectedGender) {
+                // 显示加载消息
+                document.getElementById('loadingMessage').style.display = 'block';
+                
+                // 构建结果对象
+                const result = {
+                    gender: selectedGender.value,
+                    image_url: imageUrl,
+                    study_id: studyId,
+                    session_id: sessionId,
+                    worker_id: workerId
+                };
+                
+                // 将结果编码为URL参数
+                const resultParams = new URLSearchParams(result);
+                
+                // 如果提供了完成URL，则重定向到Prolific
+                if (completionUrl) {
+                    // 检查completionUrl是否已经包含参数
+                    const separator = completionUrl.includes('?') ? '&' : '?';
+                    const redirectUrl = completionUrl + separator + resultParams.toString();
+                    
+                    // 重定向到Prolific完成页面
+                    window.location.href = redirectUrl;
+                } else {
+                    // 如果没有提供完成URL，显示结果（用于测试）
+                    document.getElementById('loadingMessage').innerHTML = 
+                        'Task completed successfully! Results:<br>' + 
+                        JSON.stringify(result, null, 2);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
