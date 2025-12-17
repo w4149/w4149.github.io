@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Labeling Task</title>
+    <!-- 添加Supabase客户端库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -384,6 +386,9 @@
             <li>There are 5 images to label in total.</li>
             <li>If the person is too small or unclear in the image, please select "Unsure" for that category.</li>
         </ol>
+        <button id="startButton" style="margin-top: 20px; padding: 10px 20px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            I understand, start annotation task
+        </button>
     </div>
 
     <script>
@@ -408,26 +413,37 @@
         
         // 获取URL参数
         const params = getUrlParams();
-        const completionUrl = params.completion_url || '';
+        // 设置Prolific完成URL
+        const completionUrl = 'https://app.prolific.com/submissions/complete?cc=CY60QQQR';
         const studyId = params.STUDY_ID || params.study_id || '';
         const sessionId = params.SESSION_ID || params.session_id || '';
         const workerId = params.PROLIFIC_PID || params.worker_id || '';
         
-        // 随机生成group (1-3)
-        const group = Math.floor(Math.random() * 3) + 1;
-        
-        // 初始化变量
+        // 变量初始化
         let currentImageIndex = 0;
-        const imageResults = [];
+        let imageStartTime = 0;
+        let imageResults = [];
+        // 从localStorage获取group值，如果不存在则生成随机值并存储
+        let group = localStorage.getItem('fairface_group');
+        if (!group) {
+            group = Math.floor(Math.random() * 3) + 1;
+            localStorage.setItem('fairface_group', group);
+        } else {
+            group = parseInt(group); // 转换为数字类型
+        }
         const imageElement = document.getElementById('targetImage');
         const navButton = document.getElementById('navButton');
         const prevButton = document.getElementById('prevButton');
         const progressText = document.getElementById('progressText');
         
         // 时间跟踪变量
-        let imageStartTime = 0;
         const imageDurations = {};
         
+        // 初始化Supabase客户端
+        const supabaseUrl = 'https://dergvehiovfaojucvsfp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlcmd2ZWhpb3ZmYW9qdWN2c2ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5NzQ4NjcsImV4cCI6MjA4MTU1MDg2N30.ahiq-7RLDydPZzJPxpr2Z0iO18zan8QpRrmV3mmVSz4';
+        // 使用window.supabase.createClient - 正确的方式
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         // 根据group设置显示的选项
         function setupGroupOptions() {
             // 显示group信息
@@ -483,7 +499,8 @@
                 `For race, select from the provided options${group === 3 ? ', Other, or Unsure' : group === 2 ? ' or Unsure' : ''} depending on your group.`,
                 `For skin color, use the Monk Scale (1-10) where 1 is the lightest and 10 is the darkest skin tone${group >= 2 ? ', or select Unsure' : ''} depending on your group.`,
                 'You must provide answers to all three questions for each image before proceeding to the next one.',
-                'There are 5 images to label in total.'
+                'There are 5 images to label in total.',
+                'Please do not refresh or exit the page before completing all annotations, otherwise your completed annotations may be lost.'
             ];
             
             // 添加到DOM
@@ -493,6 +510,29 @@
                 instructionList.appendChild(li);
             });
         }
+        
+        // 开始标注任务
+        function startAnnotation() {
+            // 隐藏开始按钮
+            document.getElementById('startButton').style.display = 'none';
+            
+            // 显示图片和表单
+            document.querySelector('.container').style.display = 'flex';
+            document.querySelector('.progress').style.display = 'block';
+            
+            // 加载第一张图片
+            loadCurrentImage();
+        }
+        
+        // 初始化
+        setupGroupOptions();
+        
+        // 隐藏图片和表单，只显示instructions
+        document.querySelector('.container').style.display = 'none';
+        document.querySelector('.progress').style.display = 'none';
+        
+        // 为开始按钮添加点击事件监听器
+        document.getElementById('startButton').addEventListener('click', startAnnotation);
         
         // 加载当前图片
         function loadCurrentImage() {
@@ -611,278 +651,323 @@
         });
         
         // 提交结果
-        function submitResults() {
-            // 构建结果对象
-            const result = {
-                results: JSON.stringify(imageResults),
-                group: group,
-                study_id: studyId,
-                session_id: sessionId,
-                worker_id: workerId
-            };
-            
-            // 将结果编码为URL参数
-            const resultParams = new URLSearchParams(result);
-            
-            // 创建结算页面HTML（直接在当前页面显示）
-            document.body.innerHTML = `
-                <style>
-                    * {
-                        box-sizing: border-box;
-                        margin: 0;
-                        padding: 0;
-                    }
+        async function submitResults() {
+            try {
+                // 显示加载信息
+                document.getElementById('loadingMessage').style.display = 'block';
+                
+                // 处理所有标注结果
+                const insertData = [];
+                for (const result of imageResults) {
+                    // 从图片URL中提取face_id（获取.jpg前面的数字）
+                    const url = result.image_url;
+                    const match = url.match(/(\d+)\.jpg/i);
+                    const face_id = match ? parseInt(match[1]) : null;
                     
-                    body {
-                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                        background-color: #f5f7fa;
-                        color: #333;
-                        line-height: 1.6;
-                        padding: 20px;
-                    }
-                    
-                    .results-container {
-                        max-width: 1200px;
-                        margin: 0 auto;
-                        background-color: #fff;
-                        border-radius: 8px;
-                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-                        padding: 40px;
-                    }
-                    
-                    h1 {
-                        color: #2c3e50;
-                        text-align: center;
-                        margin-bottom: 30px;
-                        font-size: 2.5rem;
-                        font-weight: 600;
-                    }
-                    
-                    h2 {
-                        color: #34495e;
-                        margin: 30px 0 20px;
-                        font-size: 1.5rem;
-                        font-weight: 500;
-                        border-bottom: 2px solid #ecf0f1;
-                        padding-bottom: 10px;
-                    }
-                    
-                    .thank-you {
-                        background-color: #e8f4f8;
-                        border-left: 4px solid #3498db;
-                        padding: 25px;
-                        margin-bottom: 30px;
-                        text-align: center;
-                        border-radius: 0 8px 8px 0;
-                    }
-                    
-                    .thank-you p {
-                        margin: 10px 0;
-                        font-size: 1.1rem;
-                        color: #2c3e50;
-                    }
-                    
-                    .task-info {
-                        display: grid;
-                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                        gap: 15px;
-                        margin-bottom: 30px;
-                    }
-                    
-                    .info-item {
-                        background-color: #f8f9fa;
-                        padding: 15px;
-                        border-radius: 6px;
-                        border: 1px solid #e9ecef;
-                    }
-                    
-                    .info-item strong {
-                        color: #2c3e50;
-                        display: block;
-                        font-size: 0.9rem;
-                        margin-bottom: 5px;
-                    }
-                    
-                    .info-item span {
-                        color: #495057;
-                        font-size: 1rem;
-                    }
-                    
-                    .results-section {
-                        overflow-x: auto;
-                    }
-                    
-                    .results-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 20px;
-                        font-size: 0.95rem;
-                    }
-                    
-                    .results-table th {
-                        background-color: #34495e;
-                        color: white;
-                        font-weight: 500;
-                        text-align: left;
-                        padding: 12px 15px;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                        font-size: 0.85rem;
-                    }
-                    
-                    .results-table td {
-                        padding: 12px 15px;
-                        border-bottom: 1px solid #e9ecef;
-                        vertical-align: top;
-                    }
-                    
-                    .results-table tr:nth-child(even) {
-                        background-color: #f8f9fa;
-                    }
-                    
-                    .results-table tr:hover {
-                        background-color: #e9ecef;
-                    }
-                    
-                    .duration {
-                        color: #27ae60;
-                        font-weight: 600;
-                    }
-                    
-                    .image-number {
-                        font-weight: 600;
-                        color: #3498db;
-                    }
-                    
-                    .image-url {
-                        max-width: 300px;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        display: block;
-                    }
-                    
-                    .submit-section {
-                        text-align: center;
-                        margin-top: 40px;
-                        padding-top: 30px;
-                        border-top: 2px solid #ecf0f1;
-                    }
-                    
-                    .submit-button {
-                        background-color: #3498db;
-                        color: white;
-                        padding: 14px 30px;
-                        border: none;
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-size: 1.1rem;
-                        font-weight: 500;
-                        transition: background-color 0.3s ease;
-                        margin-top: 10px;
-                    }
-                    
-                    .submit-button:hover {
-                        background-color: #2980b9;
-                    }
-                    
-                    .submit-section p {
-                        color: #6c757d;
-                        font-size: 0.95rem;
-                    }
-                    
-                    /* Responsive design */
-                    @media (max-width: 768px) {
-                        .container {
+                    // 构建插入数据
+                    insertData.push({
+                        prolific_id: workerId,
+                        study_id: studyId,
+                        session_id: sessionId,
+                        face_id: face_id,
+                        gender_annotation: result.gender,
+                        race_annotation: result.race,
+                        skin_color_annotation: result.skin,
+                        duration: result.duration,
+                    });
+                }
+                
+                // 插入数据到Supabase数据库
+                const { data, error } = await supabaseClient
+                    .from('face_annotation_from_fairface')
+                    .insert(insertData) // insertData已经是数组，不需要再用[]包裹
+                    .select();
+                
+                if (error) {
+                    // 详细错误信息
+                    console.error('Supabase错误详情:', {
+                        code: error.code,
+                        message: error.message,
+                        details: error.details,
+                        hint: error.hint
+                    });
+                    throw new Error(`Supabase错误: ${error.code} - ${error.message}`);
+                }
+                
+                console.log('数据提交成功:', data);
+                
+                // 构建结果对象
+                const result = {
+                    results: JSON.stringify(imageResults),
+                    group: group,
+                    study_id: studyId,
+                    session_id: sessionId,
+                    worker_id: workerId
+                };
+                
+                // 将结果编码为URL参数
+                const resultParams = new URLSearchParams(result);
+                
+                // 创建结算页面HTML（直接在当前页面显示）
+                document.body.innerHTML = `
+                    <style>
+                        * {
+                            box-sizing: border-box;
+                            margin: 0;
+                            padding: 0;
+                        }
+                        
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            background-color: #f5f7fa;
+                            color: #333;
+                            line-height: 1.6;
                             padding: 20px;
                         }
                         
+                        .results-container {
+                            max-width: 1200px;
+                            margin: 0 auto;
+                            background-color: #fff;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                            padding: 40px;
+                        }
+                        
                         h1 {
-                            font-size: 2rem;
+                            color: #2c3e50;
+                            text-align: center;
+                            margin-bottom: 30px;
+                            font-size: 2.5rem;
+                            font-weight: 600;
+                        }
+                        
+                        .thank-you {
+                            background-color: #e8f4f8;
+                            border-left: 4px solid #3498db;
+                            padding: 25px;
+                            margin-bottom: 30px;
+                            text-align: center;
+                            border-radius: 0 8px 8px 0;
+                        }
+                        
+                        .thank-you p {
+                            margin: 10px 0;
+                            font-size: 1.1rem;
+                            color: #2c3e50;
                         }
                         
                         .task-info {
-                            grid-template-columns: 1fr;
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                            gap: 15px;
+                            margin-bottom: 30px;
+                        }
+                        
+                        .info-item {
+                            background-color: #f8f9fa;
+                            padding: 15px;
+                            border-radius: 6px;
+                            border: 1px solid #e9ecef;
+                        }
+                        
+                        .info-item strong {
+                            color: #2c3e50;
+                            display: block;
+                            font-size: 0.9rem;
+                            margin-bottom: 5px;
+                        }
+                        
+                        .info-item span {
+                            color: #495057;
+                            font-size: 1rem;
+                        }
+                        
+                        .results-section {
+                            overflow-x: auto;
                         }
                         
                         .results-table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                            font-size: 0.95rem;
+                        }
+                        
+                        .results-table th {
+                            background-color: #34495e;
+                            color: white;
+                            font-weight: 500;
+                            text-align: left;
+                            padding: 12px 15px;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
                             font-size: 0.85rem;
                         }
                         
-                        .results-table th,
                         .results-table td {
-                            padding: 8px 10px;
+                            padding: 12px 15px;
+                            border-bottom: 1px solid #e9ecef;
+                            vertical-align: top;
                         }
-                    }
-                </style>
-                
-                <div class="results-container">
-                    <h1>Task Completed</h1>
+                        
+                        .results-table tr:nth-child(even) {
+                            background-color: #f8f9fa;
+                        }
+                        
+                        .results-table tr:hover {
+                            background-color: #e9ecef;
+                        }
+                        
+                        .duration {
+                            color: #27ae60;
+                            font-weight: 600;
+                        }
+                        
+                        .image-number {
+                            font-weight: 600;
+                            color: #3498db;
+                        }
+                        
+                        .image-url {
+                            max-width: 300px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                            white-space: nowrap;
+                            display: block;
+                        }
+                        
+                        .submit-section {
+                            text-align: center;
+                            margin-top: 40px;
+                            padding-top: 30px;
+                            border-top: 2px solid #ecf0f1;
+                        }
+                        
+                        .submit-button {
+                            background-color: #3498db;
+                            color: white;
+                            padding: 14px 30px;
+                            border: none;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 1.1rem;
+                            font-weight: 500;
+                            transition: background-color 0.3s ease;
+                            margin-top: 10px;
+                        }
+                        
+                        .submit-button:hover {
+                            background-color: #2980b9;
+                        }
+                        
+                        .submit-section p {
+                            color: #6c757d;
+                            font-size: 0.95rem;
+                        }
+                        
+                        /* Responsive design */
+                        @media (max-width: 768px) {
+                            .container {
+                                padding: 20px;
+                            }
+                            
+                            h1 {
+                                font-size: 2rem;
+                            }
+                            
+                            .task-info {
+                                grid-template-columns: 1fr;
+                            }
+                            
+                            .results-table {
+                                font-size: 0.85rem;
+                            }
+                            
+                            .results-table th,
+                            .results-table td {
+                                padding: 8px 10px;
+                            }
+                        }
+                    </style>
                     
-                    <div class="thank-you">
-                        <p>Thank you for your participation! You have successfully completed all image annotation tasks.</p>
-                        <p>Your annotations are extremely valuable to our research. We appreciate your patience and attention to detail.</p>
-                    </div>
-                    
-                    <h2>Task Information</h2>
-                    <div class="task-info">
-                        <div class="info-item">
-                            <strong>Group</strong>
-                            <span>${group}</span>
+                    <div class="results-container">
+                        <h1>Task Completed</h1>
+                        
+                        <div class="thank-you">
+                            <p>Thank you for your participation! You have successfully completed all image annotation tasks.</p>
+                            <p>Your annotations are extremely valuable to our research. We appreciate your patience and attention to detail.</p>
                         </div>
-                        <div class="info-item">
-                            <strong>Study ID</strong>
-                            <span>${studyId}</span>
+                        
+                        <h2>Task Information</h2>
+                        <div class="task-info">
+                            <div class="info-item">
+                                <strong>Group</strong>
+                                <span>${group}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Study ID</strong>
+                                <span>${studyId}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Session ID</strong>
+                                <span>${sessionId}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Worker ID</strong>
+                                <span>${workerId}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Images Annotated</strong>
+                                <span>${imageResults.length}</span>
+                            </div>
                         </div>
-                        <div class="info-item">
-                            <strong>Session ID</strong>
-                            <span>${sessionId}</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Worker ID</strong>
-                            <span>${workerId}</span>
-                        </div>
-                        <div class="info-item">
-                            <strong>Images Annotated</strong>
-                            <span>${imageResults.length}</span>
-                        </div>
-                    </div>
-                    
-                    <h2>Annotation Results</h2>
-                    <div class="results-section">
-                        <table class="results-table">
-                            <tr>
-                                <th>Image</th>
-                                <th>URL</th>
-                                <th>Gender</th>
-                                <th>Race</th>
-                                <th>Skin Tone</th>
-                                <th>Duration</th>
-                            </tr>
-                            ${imageResults.map((result, index) => `
+                        
+                        <h2>Annotation Results</h2>
+                        <div class="results-section">
+                            <table class="results-table">
                                 <tr>
-                                    <td class="image-number">${index + 1}</td>
-                                    <td><span class="image-url">${result.image_url}</span></td>
-                                    <td>${result.gender}</td>
-                                    <td>${result.race}</td>
-                                    <td>${result.skin}</td>
-                                    <td class="duration">${(result.duration / 1000).toFixed(2)}s</td>
+                                    <th>Image</th>
+                                    <th>URL</th>
+                                    <th>Gender</th>
+                                    <th>Race</th>
+                                    <th>Skin Tone</th>
+                                    <th>Duration</th>
                                 </tr>
-                            `).join('')}
-                        </table>
-                    </div>
-                    
-                    ${completionUrl ? `
-                        <div class="submit-section">
-                            <h2>Complete Task</h2>
-                            <p>Click the button below to finalize your participation and return to Prolific</p>
-                            <button class="submit-button" onclick="window.location.href='${completionUrl + (completionUrl.includes('?') ? '&' : '?') + resultParams.toString()}'">
-                                Complete and Submit
-                            </button>
+                                ${imageResults.map((result, index) => `
+                                    <tr>
+                                        <td class="image-number">${index + 1}</td>
+                                        <td><span class="image-url">${result.image_url}</span></td>
+                                        <td>${result.gender}</td>
+                                        <td>${result.race}</td>
+                                        <td>${result.skin}</td>
+                                        <td class="duration">${(result.duration / 1000).toFixed(2)}s</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
                         </div>
-                    ` : ''}
-                </div>
-            `;
+                        
+                        ${completionUrl ? `
+                            <div class="submit-section">
+                                <h2>Complete Task</h2>
+                                <p>Click the button below to finalize your participation and return to Prolific</p>
+                                <button class="submit-button" onclick="window.location.href='${completionUrl + (completionUrl.includes('?') ? '&' : '?') + resultParams.toString()}'">
+                                    Complete and Submit
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('提交数据失败:', error);
+                alert('数据提交失败，请稍后重试或联系研究人员。');
+            } finally {
+                // 隐藏加载信息，添加null检查避免TypeError
+                const loadingElement = document.getElementById('loadingMessage');
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+            }
         }
         
         // 初始化
