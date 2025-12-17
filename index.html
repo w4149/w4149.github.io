@@ -51,28 +51,36 @@
         }
         
         .question {
-            font-size: 24px;
-            margin-bottom: 30px;
+            font-size: 18px;
+            margin-bottom: 20px;
             text-align: center;
+            font-weight: bold;
+        }
+        
+        .question-section {
+            margin-bottom: 30px;
         }
         
         .options {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 15px 25px;
+            justify-content: center;
+            margin-bottom: 15px;
         }
         
         .option {
             display: flex;
             align-items: center;
-            font-size: 20px;
+            font-size: 16px;
             cursor: pointer;
         }
         
         .option input[type="radio"] {
-            margin-right: 15px;
-            width: 20px;
-            height: 20px;
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
         }
         
         .nav-btn {
@@ -103,9 +111,26 @@
             background-color: #0b7dda;
         }
         
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
         .nav-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
+        }
+
+        .prev-btn {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 2px solid #ccc;
+        }
+
+        .prev-btn:hover {
+            background-color: #e0e0e0;
         }
         
         .loading {
@@ -113,11 +138,67 @@
             color: #666;
             margin-top: 20px;
         }
+        
+        /* Monk Scale 样式 */
+        .monk-scale {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .monk-scale-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .monk-scale-color {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            margin-bottom: 5px;
+        }
+        
+        .monk-scale-label {
+            font-size: 12px;
+        }
+        
+        /* Instruction 样式 */
+        .instruction {
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            max-width: 1000px;
+        }
+        
+        .instruction h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .instruction ol {
+            line-height: 1.8;
+            color: #555;
+        }
+        
+        .instruction li {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Image Labeling Task</h1>
-    <p>Please identify the gender of the person in each image.</p>
+    <p>Please provide the following information for the person in each image:</p>
+    
+    <!-- Group显示 -->
+    <div style="margin: 20px 0; font-size: 20px; font-weight: bold; color: #333;">
+        Group: <span id="groupDisplay"></span>
+    </div>
     
     <div class="progress">
         <span id="progressText">Image 1 of 5</span>
@@ -129,26 +210,181 @@
         </div>
         
         <div class="form-container">
-            <div class="question">What is the gender of the person?</div>
-            
             <form id="labelForm">
-                <div class="options">
-                    <div class="option">
-                        <input type="radio" id="male" name="gender" value="male">
-                        <label for="male">Male</label>
-                    </div>
-                    <div class="option">
-                        <input type="radio" id="female" name="gender" value="female">
-                        <label for="female">Female</label>
+                <!-- 性别问题 -->
+                <div class="question-section">
+                    <div class="question">1. What is the gender of the person?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" id="gender-male" name="gender" value="male">
+                            <label for="gender-male">Male</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="gender-female" name="gender" value="female">
+                            <label for="gender-female">Female</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="gender-other" name="gender" value="other">
+                            <label for="gender-other">Other</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="gender-unsure" name="gender" value="unsure">
+                            <label for="gender-unsure">Unsure</label>
+                        </div>
                     </div>
                 </div>
                 
-                <button type="submit" id="navButton" class="nav-btn next-btn" disabled>Next Image</button>
+                <!-- 种族问题 -->
+                <div class="question-section">
+                    <div class="question">2. What is the race of the person?</div>
+                    <div class="options">
+                        <div class="option">
+                            <input type="radio" id="race-white" name="race" value="White">
+                            <label for="race-white">White</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-black" name="race" value="Black">
+                            <label for="race-black">Black</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-indian" name="race" value="Indian">
+                            <label for="race-indian">Indian</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-east-asian" name="race" value="East Asian">
+                            <label for="race-east-asian">East Asian</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-southeast-asian" name="race" value="Southeast Asian">
+                            <label for="race-southeast-asian">Southeast Asian</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-middle-east" name="race" value="Middle East">
+                            <label for="race-middle-east">Middle East</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-latino" name="race" value="Latino">
+                            <label for="race-latino">Latino</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-other" name="race" value="other">
+                            <label for="race-other">Other</label>
+                        </div>
+                        <div class="option">
+                            <input type="radio" id="race-unsure" name="race" value="unsure">
+                            <label for="race-unsure">Unsure</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 肤色问题 - Monk Scale -->
+                <div class="question-section">
+                    <div class="question">3. What is the skin color of the person? (Monk Scale 1-10)</div>
+                    <div class="monk-scale">
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #FDE7B8;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-1" name="skin" value="1">
+                                <label for="skin-1" class="monk-scale-label">1</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #F5C696;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-2" name="skin" value="2">
+                                <label for="skin-2" class="monk-scale-label">2</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #E1B38E;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-3" name="skin" value="3">
+                                <label for="skin-3" class="monk-scale-label">3</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #CE9A79;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-4" name="skin" value="4">
+                                <label for="skin-4" class="monk-scale-label">4</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #A87B5F;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-5" name="skin" value="5">
+                                <label for="skin-5" class="monk-scale-label">5</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #8D604E;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-6" name="skin" value="6">
+                                <label for="skin-6" class="monk-scale-label">6</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #734D3E;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-7" name="skin" value="7">
+                                <label for="skin-7" class="monk-scale-label">7</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #593D2E;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-8" name="skin" value="8">
+                                <label for="skin-8" class="monk-scale-label">8</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #422D21;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-9" name="skin" value="9">
+                                <label for="skin-9" class="monk-scale-label">9</label>
+                            </div>
+                        </div>
+                        <div class="monk-scale-item">
+                            <div class="monk-scale-color" style="background-color: #2A1D14;"></div>
+                            <div class="option">
+                                <input type="radio" id="skin-10" name="skin" value="10">
+                                <label for="skin-10" class="monk-scale-label">10</label>
+                            </div>
+                        </div>
+                        <!-- 肤色unsure选项 -->
+                        <div class="monk-scale-item" id="skin-unsure-option">
+                            <!-- 移除色块div，只保留选项 -->
+                            <div class="option" style="margin-top: 45px;"> <!-- 添加margin-top与其他选项对齐 -->
+                                <input type="radio" id="skin-unsure" name="skin" value="unsure">
+                                <label for="skin-unsure" class="monk-scale-label">Unsure</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="nav-buttons">
+                    <button type="button" id="prevButton" class="nav-btn prev-btn" disabled>Previous Image</button>
+                    <button type="submit" id="navButton" class="nav-btn next-btn" disabled>Next Image</button>
+                </div>
             </form>
         </div>
     </div>
     
     <div class="loading" id="loadingMessage" style="display: none;">Processing your submission...</div>
+    
+    <!-- Instruction 部分 -->
+    <div class="instruction">
+        <h2>Instructions</h2>
+        <ol>
+            <li>Please carefully examine the person in each image and provide accurate labels for gender, race, and skin color.</li>
+            <li>For gender, select from Male, Female, Other, or Unsure if you cannot determine.</li>
+            <li>For race, select from the provided options or choose "Other" if none apply, "Unsure" if you cannot determine.</li>
+            <li>For skin color, use the Monk Scale (1-10) where 1 is the lightest and 10 is the darkest skin tone.</li>
+            <li>You must provide answers to all three questions for each image before proceeding to the next one.</li>
+            <li>There are 5 images to label in total.</li>
+            <li>If the person is too small or unclear in the image, please select "Unsure" for that category.</li>
+        </ol>
+    </div>
 
     <script>
         // 从URL参数中获取完成URL和其他参数
@@ -177,22 +413,97 @@
         const sessionId = params.SESSION_ID || params.session_id || '';
         const workerId = params.PROLIFIC_PID || params.worker_id || '';
         
+        // 随机生成group (1-3)
+        const group = Math.floor(Math.random() * 3) + 1;
+        
         // 初始化变量
         let currentImageIndex = 0;
         const imageResults = [];
         const imageElement = document.getElementById('targetImage');
         const navButton = document.getElementById('navButton');
+        const prevButton = document.getElementById('prevButton');
         const progressText = document.getElementById('progressText');
+        
+        // 时间跟踪变量
+        let imageStartTime = 0;
+        const imageDurations = {};
+        
+        // 根据group设置显示的选项
+        function setupGroupOptions() {
+            // 显示group信息
+            document.getElementById('groupDisplay').textContent = `Group ${group}`;
+            
+            // 获取所有选项元素
+            const genderOtherOption = document.querySelector('input[name="gender"][value="other"]').closest('.option');
+            const genderUnsureOption = document.querySelector('input[name="gender"][value="unsure"]').closest('.option');
+            const raceOtherOption = document.querySelector('input[name="race"][value="other"]').closest('.option');
+            const raceUnsureOption = document.querySelector('input[name="race"][value="unsure"]').closest('.option');
+            const skinUnsureOption = document.getElementById('skin-unsure-option');
+            
+            // 根据group设置选项的显示/隐藏
+            switch(group) {
+                case 1: // group1: 没有other或unsure选项
+                    genderOtherOption.style.display = 'none';
+                    genderUnsureOption.style.display = 'none';
+                    raceOtherOption.style.display = 'none';
+                    raceUnsureOption.style.display = 'none';
+                    skinUnsureOption.style.display = 'none';
+                    break;
+                case 2: // group2: 有unsure选项，没有other选项
+                    genderOtherOption.style.display = 'none';
+                    genderUnsureOption.style.display = 'flex';
+                    raceOtherOption.style.display = 'none';
+                    raceUnsureOption.style.display = 'flex';
+                    skinUnsureOption.style.display = 'flex';
+                    break;
+                case 3: // group3: 有unsure和other选项
+                    genderOtherOption.style.display = 'flex';
+                    genderUnsureOption.style.display = 'flex';
+                    raceOtherOption.style.display = 'flex';
+                    raceUnsureOption.style.display = 'flex';
+                    skinUnsureOption.style.display = 'flex';
+                    break;
+            }
+            
+            // 更新instructions
+            updateInstructions();
+        }
+        
+        // 更新instructions内容
+        function updateInstructions() {
+            const instructionList = document.querySelector('.instruction ol');
+            
+            // 清除现有instructions
+            instructionList.innerHTML = '';
+            
+            // 添加基础instructions
+            const instructions = [
+                'Please carefully examine the person in each image and provide accurate labels for gender, race, and skin color.',
+                `For gender, select from ${group === 3 ? 'Male, Female, Other, or Unsure' : group === 2 ? 'Male, Female, or Unsure' : 'Male or Female'} depending on your group.`,
+                `For race, select from the provided options${group === 3 ? ', Other, or Unsure' : group === 2 ? ' or Unsure' : ''} depending on your group.`,
+                `For skin color, use the Monk Scale (1-10) where 1 is the lightest and 10 is the darkest skin tone${group >= 2 ? ', or select Unsure' : ''} depending on your group.`,
+                'You must provide answers to all three questions for each image before proceeding to the next one.',
+                'There are 5 images to label in total.'
+            ];
+            
+            // 添加到DOM
+            instructions.forEach(text => {
+                const li = document.createElement('li');
+                li.textContent = text;
+                instructionList.appendChild(li);
+            });
+        }
         
         // 加载当前图片
         function loadCurrentImage() {
             // 清除之前的选择
-            document.querySelectorAll('input[name="gender"]').forEach(radio => {
+            document.querySelectorAll('input[name="gender"], input[name="race"], input[name="skin"]').forEach(radio => {
                 radio.checked = false;
             });
             
             // 禁用按钮
             navButton.disabled = true;
+            prevButton.disabled = true;
             
             // 更新进度
             progressText.textContent = `Image ${currentImageIndex + 1} of ${imageUrls.length}`;
@@ -201,10 +512,46 @@
             imageElement.src = imageUrls[currentImageIndex];
         }
         
-        // 当图片加载完成后启用按钮
+        // 当图片加载完成后启用按钮并开始计时
         imageElement.onload = function() {
+            // 记录图片加载完成时间（开始计时）
+            imageStartTime = Date.now();
+            
             navButton.disabled = false;
+            
+            // 如果有上一张图片，则启用PREVIOUS按钮
+            prevButton.disabled = currentImageIndex === 0;
+            
+            // 恢复之前的选择（如果有）
+            if (imageResults[currentImageIndex]) {
+                const previousResult = imageResults[currentImageIndex];
+                
+                // 恢复性别选择
+                const genderInput = document.querySelector(`input[name="gender"][value="${previousResult.gender}"]`);
+                if (genderInput) genderInput.checked = true;
+                
+                // 恢复种族选择
+                const raceInput = document.querySelector(`input[name="race"][value="${previousResult.race}"]`);
+                if (raceInput) raceInput.checked = true;
+                
+                // 恢复肤色选择
+                const skinInput = document.querySelector(`input[name="skin"][value="${previousResult.skin}"]`);
+                if (skinInput) skinInput.checked = true;
+            }
         };
+        
+        // 监听PREVIOUS按钮点击事件
+        prevButton.addEventListener('click', function() {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                loadCurrentImage();
+                
+                // 更新按钮文本
+                navButton.textContent = "Next Image";
+                navButton.classList.remove('submit-btn');
+                navButton.classList.add('next-btn');
+            }
+        });
         
         // 监听表单提交
         document.getElementById('labelForm').addEventListener('submit', function(e) {
@@ -212,13 +559,34 @@
             
             // 获取用户选择
             const selectedGender = document.querySelector('input[name="gender"]:checked');
+            const selectedRace = document.querySelector('input[name="race"]:checked');
+            const selectedSkin = document.querySelector('input[name="skin"]:checked');
             
-            if (selectedGender) {
+            // 验证所有问题都已回答
+            if (selectedGender && selectedRace && selectedSkin) {
+                // 计算当前图片的停留时长（毫秒）
+                const duration = Date.now() - imageStartTime;
+                
                 // 保存当前结果
-                imageResults.push({
-                    image_url: imageUrls[currentImageIndex],
-                    gender: selectedGender.value
-                });
+                if (imageResults[currentImageIndex]) {
+                    // 如果已经有这个图片的结果，更新它
+                    imageResults[currentImageIndex] = {
+                        image_url: imageUrls[currentImageIndex],
+                        gender: selectedGender.value,
+                        race: selectedRace.value,
+                        skin: selectedSkin.value,
+                        duration: duration
+                    };
+                } else {
+                    // 如果没有这个图片的结果，添加它
+                    imageResults[currentImageIndex] = {
+                        image_url: imageUrls[currentImageIndex],
+                        gender: selectedGender.value,
+                        race: selectedRace.value,
+                        skin: selectedSkin.value,
+                        duration: duration
+                    };
+                }
                 
                 // 检查是否是最后一张图片
                 if (currentImageIndex < imageUrls.length - 1) {
@@ -236,17 +604,18 @@
                     // 所有图片都已标注，提交结果
                     submitResults();
                 }
+            } else {
+                // 提示用户回答所有问题
+                alert('Please answer all three questions before proceeding.');
             }
         });
         
         // 提交结果
         function submitResults() {
-            // 显示加载消息
-            document.getElementById('loadingMessage').style.display = 'block';
-            
             // 构建结果对象
             const result = {
                 results: JSON.stringify(imageResults),
+                group: group,
                 study_id: studyId,
                 session_id: sessionId,
                 worker_id: workerId
@@ -255,23 +624,269 @@
             // 将结果编码为URL参数
             const resultParams = new URLSearchParams(result);
             
-            // 如果提供了完成URL，则重定向到Prolific
-            if (completionUrl) {
-                // 检查completionUrl是否已经包含参数
-                const separator = completionUrl.includes('?') ? '&' : '?';
-                const redirectUrl = completionUrl + separator + resultParams.toString();
+            // 创建结算页面HTML（直接在当前页面显示）
+            document.body.innerHTML = `
+                <style>
+                    * {
+                        box-sizing: border-box;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    
+                    body {
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        background-color: #f5f7fa;
+                        color: #333;
+                        line-height: 1.6;
+                        padding: 20px;
+                    }
+                    
+                    .results-container {
+                        max-width: 1200px;
+                        margin: 0 auto;
+                        background-color: #fff;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                        padding: 40px;
+                    }
+                    
+                    h1 {
+                        color: #2c3e50;
+                        text-align: center;
+                        margin-bottom: 30px;
+                        font-size: 2.5rem;
+                        font-weight: 600;
+                    }
+                    
+                    h2 {
+                        color: #34495e;
+                        margin: 30px 0 20px;
+                        font-size: 1.5rem;
+                        font-weight: 500;
+                        border-bottom: 2px solid #ecf0f1;
+                        padding-bottom: 10px;
+                    }
+                    
+                    .thank-you {
+                        background-color: #e8f4f8;
+                        border-left: 4px solid #3498db;
+                        padding: 25px;
+                        margin-bottom: 30px;
+                        text-align: center;
+                        border-radius: 0 8px 8px 0;
+                    }
+                    
+                    .thank-you p {
+                        margin: 10px 0;
+                        font-size: 1.1rem;
+                        color: #2c3e50;
+                    }
+                    
+                    .task-info {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 15px;
+                        margin-bottom: 30px;
+                    }
+                    
+                    .info-item {
+                        background-color: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 6px;
+                        border: 1px solid #e9ecef;
+                    }
+                    
+                    .info-item strong {
+                        color: #2c3e50;
+                        display: block;
+                        font-size: 0.9rem;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .info-item span {
+                        color: #495057;
+                        font-size: 1rem;
+                    }
+                    
+                    .results-section {
+                        overflow-x: auto;
+                    }
+                    
+                    .results-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 20px;
+                        font-size: 0.95rem;
+                    }
+                    
+                    .results-table th {
+                        background-color: #34495e;
+                        color: white;
+                        font-weight: 500;
+                        text-align: left;
+                        padding: 12px 15px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        font-size: 0.85rem;
+                    }
+                    
+                    .results-table td {
+                        padding: 12px 15px;
+                        border-bottom: 1px solid #e9ecef;
+                        vertical-align: top;
+                    }
+                    
+                    .results-table tr:nth-child(even) {
+                        background-color: #f8f9fa;
+                    }
+                    
+                    .results-table tr:hover {
+                        background-color: #e9ecef;
+                    }
+                    
+                    .duration {
+                        color: #27ae60;
+                        font-weight: 600;
+                    }
+                    
+                    .image-number {
+                        font-weight: 600;
+                        color: #3498db;
+                    }
+                    
+                    .image-url {
+                        max-width: 300px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        display: block;
+                    }
+                    
+                    .submit-section {
+                        text-align: center;
+                        margin-top: 40px;
+                        padding-top: 30px;
+                        border-top: 2px solid #ecf0f1;
+                    }
+                    
+                    .submit-button {
+                        background-color: #3498db;
+                        color: white;
+                        padding: 14px 30px;
+                        border: none;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 1.1rem;
+                        font-weight: 500;
+                        transition: background-color 0.3s ease;
+                        margin-top: 10px;
+                    }
+                    
+                    .submit-button:hover {
+                        background-color: #2980b9;
+                    }
+                    
+                    .submit-section p {
+                        color: #6c757d;
+                        font-size: 0.95rem;
+                    }
+                    
+                    /* Responsive design */
+                    @media (max-width: 768px) {
+                        .container {
+                            padding: 20px;
+                        }
+                        
+                        h1 {
+                            font-size: 2rem;
+                        }
+                        
+                        .task-info {
+                            grid-template-columns: 1fr;
+                        }
+                        
+                        .results-table {
+                            font-size: 0.85rem;
+                        }
+                        
+                        .results-table th,
+                        .results-table td {
+                            padding: 8px 10px;
+                        }
+                    }
+                </style>
                 
-                // 重定向到Prolific完成页面
-                window.location.href = redirectUrl;
-            } else {
-                // 如果没有提供完成URL，显示结果（用于测试）
-                document.getElementById('loadingMessage').innerHTML = 
-                    'Task completed successfully! Results:<br>' + 
-                    JSON.stringify(imageResults, null, 2);
-            }
+                <div class="results-container">
+                    <h1>Task Completed</h1>
+                    
+                    <div class="thank-you">
+                        <p>Thank you for your participation! You have successfully completed all image annotation tasks.</p>
+                        <p>Your annotations are extremely valuable to our research. We appreciate your patience and attention to detail.</p>
+                    </div>
+                    
+                    <h2>Task Information</h2>
+                    <div class="task-info">
+                        <div class="info-item">
+                            <strong>Group</strong>
+                            <span>${group}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Study ID</strong>
+                            <span>${studyId}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Session ID</strong>
+                            <span>${sessionId}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Worker ID</strong>
+                            <span>${workerId}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Images Annotated</strong>
+                            <span>${imageResults.length}</span>
+                        </div>
+                    </div>
+                    
+                    <h2>Annotation Results</h2>
+                    <div class="results-section">
+                        <table class="results-table">
+                            <tr>
+                                <th>Image</th>
+                                <th>URL</th>
+                                <th>Gender</th>
+                                <th>Race</th>
+                                <th>Skin Tone</th>
+                                <th>Duration</th>
+                            </tr>
+                            ${imageResults.map((result, index) => `
+                                <tr>
+                                    <td class="image-number">${index + 1}</td>
+                                    <td><span class="image-url">${result.image_url}</span></td>
+                                    <td>${result.gender}</td>
+                                    <td>${result.race}</td>
+                                    <td>${result.skin}</td>
+                                    <td class="duration">${(result.duration / 1000).toFixed(2)}s</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    </div>
+                    
+                    ${completionUrl ? `
+                        <div class="submit-section">
+                            <h2>Complete Task</h2>
+                            <p>Click the button below to finalize your participation and return to Prolific</p>
+                            <button class="submit-button" onclick="window.location.href='${completionUrl + (completionUrl.includes('?') ? '&' : '?') + resultParams.toString()}'">
+                                Complete and Submit
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
         }
         
-        // 初始化加载第一张图片
+        // 初始化
+        setupGroupOptions();
         loadCurrentImage();
     </script>
 </body>
