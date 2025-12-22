@@ -406,7 +406,7 @@
         const imageUrls = [
             "https://github.com/w4149/w4149.github.io/blob/main/7.jpg?raw=true",
             "https://github.com/w4149/w4149.github.io/blob/main/47.jpg?raw=true",
-            "https://github.com/w4149/w4149.github.io/blob/main/7.jpg?raw=true",
+            "https://github.com/w4149/w4149.github.io/blob/main/10000001.jpg?raw=true",
             "https://github.com/w4149/w4149.github.io/blob/main/47.jpg?raw=true",
             "https://github.com/w4149/w4149.github.io/blob/main/7.jpg?raw=true"
         ];
@@ -500,7 +500,8 @@
                 `For skin color, use the Monk Scale (1-10) where 1 is the lightest and 10 is the darkest skin tone${group >= 2 ? ', or select Unsure' : ''} depending on your group.`,
                 'You must provide answers to all three questions for each image before proceeding to the next one.',
                 'There are 5 images to label in total.',
-                'Please do not refresh or exit the page before completing all annotations, otherwise your completed annotations may be lost.'
+                'Please do not refresh or exit the page before completing all annotations, otherwise your completed annotations may be lost.',
+                '本研究包含若干注意力检查题，用于确保参与者认真作答。请仔细阅读每道题目的说明。'
             ];
             
             // 添加到DOM
@@ -577,6 +578,79 @@
                 // 恢复肤色选择
                 const skinInput = document.querySelector(`input[name="skin"][value="${previousResult.skin}"]`);
                 if (skinInput) skinInput.checked = true;
+            }
+            
+            // 获取问题元素
+            const genderQuestion = document.querySelector('.question-section:nth-child(1) .question');
+            const raceQuestion = document.querySelector('.question-section:nth-child(2) .question');
+            const skinQuestion = document.querySelector('.question-section:nth-child(3) .question');
+            
+            // 保存原始问题文本（仅在首次获取时保存）
+            if (!window.originalQuestions) {
+                window.originalQuestions = {
+                    gender: genderQuestion.textContent,
+                    race: raceQuestion.textContent,
+                    skin: skinQuestion.textContent
+                };
+            }
+            
+            // 获取选项元素
+            const genderOtherOption = document.querySelector('input[name="gender"][value="other"]').closest('.option');
+            const genderUnsureOption = document.querySelector('input[name="gender"][value="unsure"]').closest('.option');
+            const raceOtherOption = document.querySelector('input[name="race"][value="other"]').closest('.option');
+            const raceUnsureOption = document.querySelector('input[name="race"][value="unsure"]').closest('.option');
+            const skinUnsureOption = document.getElementById('skin-unsure-option');
+            
+            // 检查当前图片是否为特定URL
+            const currentImageUrl = imageUrls[currentImageIndex];
+            const targetImageUrl = "https://github.com/w4149/w4149.github.io/blob/main/10000001.jpg?raw=true";
+            
+            if (currentImageUrl === targetImageUrl) {
+                // 显示所有unsure选项
+                genderUnsureOption.style.display = 'flex';
+                raceUnsureOption.style.display = 'flex';
+                skinUnsureOption.style.display = 'flex';
+                
+                // 将unsure改为CAT
+                document.querySelector('label[for="gender-unsure"]').textContent = 'CAT';
+                document.querySelector('label[for="race-unsure"]').textContent = 'CAT';
+                document.querySelector('label[for="skin-unsure"]').textContent = 'CAT';
+                
+                // 修改三个问题的文本
+                genderQuestion.textContent = '此题为attention question，请选择CAT';
+                raceQuestion.textContent = '此题为attention question，请选择CAT';
+                skinQuestion.textContent = '此题为attention question，请选择CAT';
+            } else {
+                // 恢复原来的unsure文本
+                document.querySelector('label[for="gender-unsure"]').textContent = 'Unsure';
+                document.querySelector('label[for="race-unsure"]').textContent = 'Unsure';
+                document.querySelector('label[for="skin-unsure"]').textContent = 'Unsure';
+                
+                // 恢复原始问题文本
+                if (window.originalQuestions) {
+                    genderQuestion.textContent = window.originalQuestions.gender;
+                    raceQuestion.textContent = window.originalQuestions.race;
+                    skinQuestion.textContent = window.originalQuestions.skin;
+                }
+                
+                // 根据group恢复unsure选项的显示/隐藏
+                switch(group) {
+                    case 1: // group1: 没有other或unsure选项
+                        genderUnsureOption.style.display = 'none';
+                        raceUnsureOption.style.display = 'none';
+                        skinUnsureOption.style.display = 'none';
+                        break;
+                    case 2: // group2: 有unsure选项，没有other选项
+                        genderUnsureOption.style.display = 'flex';
+                        raceUnsureOption.style.display = 'flex';
+                        skinUnsureOption.style.display = 'flex';
+                        break;
+                    case 3: // group3: 有unsure和other选项
+                        genderUnsureOption.style.display = 'flex';
+                        raceUnsureOption.style.display = 'flex';
+                        skinUnsureOption.style.display = 'flex';
+                        break;
+                }
             }
         };
         
