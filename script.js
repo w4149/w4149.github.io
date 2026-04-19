@@ -1,3 +1,4 @@
+
 (function() {
   const universe = document.getElementById('universe');
   const sentenceElements = [];
@@ -104,6 +105,7 @@
         console.log('Audio play error:', error);
         // 显示错误信息以便调试
         console.log('Audio path:', sentenceData.el.dataset.audio);
+        // 微信浏览器可能不支持 Web Speech API，尝试直接播放
         fallbackToSpeech(sentence);
       });
     } else {
@@ -113,13 +115,25 @@
 
   function fallbackToSpeech(text) {
     // 停止语音合成
-    speechSynthesis.cancel();
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'zh-CN';
-      utterance.rate = 0.9;
-      utterance.pitch = 1.1;
-      speechSynthesis.speak(utterance);
+    if (speechSynthesis) {
+      speechSynthesis.cancel();
+    }
+
+    // 检查是否支持 Web Speech API
+    if ('speechSynthesis' in window && speechSynthesis) {
+      try {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.log('Speech synthesis error:', error);
+        // 微信浏览器不支持语音合成时的处理
+        console.log('Web Speech API not supported, using audio fallback');
+      }
+    } else {
+      console.log('Web Speech API not available');
     }
   }
 
