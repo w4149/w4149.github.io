@@ -95,12 +95,15 @@
       currentAudio.pause();
       currentAudio.currentTime = 0;
     }
-    
+
     const sentenceData = sentenceElements.find(s => s.el.textContent === sentence);
     if (sentenceData && sentenceData.el.dataset.audio) {
       currentAudio = new Audio(sentenceData.el.dataset.audio);
+      currentAudio.crossOrigin = 'anonymous';
       currentAudio.play().catch(error => {
         console.log('Audio play error:', error);
+        // 显示错误信息以便调试
+        console.log('Audio path:', sentenceData.el.dataset.audio);
         fallbackToSpeech(sentence);
       });
     } else {
