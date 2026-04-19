@@ -3,6 +3,7 @@
   const sentenceElements = [];
   let hoveredId = null;
   let animationId = null;
+  let currentAudio = null;
 
   const GRAVITY_G = 8000;
   const DAMPING = 0.92;
@@ -15,6 +16,9 @@
       el.className = 'sentence';
       el.textContent = data.text;
       el.dataset.id = data.id;
+      if (data.audio) {
+        el.dataset.audio = data.audio;
+      }
       el.style.left = data.x + '%';
       el.style.top = data.y + '%';
       el.style.opacity = 0.3 + Math.random() * 0.3;
@@ -85,9 +89,29 @@
     }
   }
 
-  function playAudio(text) {
+  function playAudio(sentence) {
+    // 停止当前正在播放的音频
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    }
+    
+    const sentenceData = sentenceElements.find(s => s.el.textContent === sentence);
+    if (sentenceData && sentenceData.el.dataset.audio) {
+      currentAudio = new Audio(sentenceData.el.dataset.audio);
+      currentAudio.play().catch(error => {
+        console.log('Audio play error:', error);
+        fallbackToSpeech(sentence);
+      });
+    } else {
+      fallbackToSpeech(sentence);
+    }
+  }
+
+  function fallbackToSpeech(text) {
+    // 停止语音合成
+    speechSynthesis.cancel();
     if ('speechSynthesis' in window) {
-      speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'zh-CN';
       utterance.rate = 0.9;
